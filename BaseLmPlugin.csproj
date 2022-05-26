@@ -4,7 +4,7 @@
 		<LangVersion>latest</LangVersion>
 		<Product>BaseLmPlugin</Product>
 		<Description>Basic license management functionality plugin.</Description>
-		<Copyright>Copyright NET Projects © 2020</Copyright>
+		<Copyright>Copyright NET Projects © 2022</Copyright>
 		<Company>NET Projects</Company>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<UseWindowsForms>true</UseWindowsForms>
@@ -13,7 +13,7 @@
 		<Optimize>true</Optimize>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<TargetFramework>net461</TargetFramework>
-		<Configurations>Debug;Release;NET_5_WIN_DEBUG;NET_5_WIN_RELEASE</Configurations>
+		<Configurations>Debug;Release</Configurations>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
