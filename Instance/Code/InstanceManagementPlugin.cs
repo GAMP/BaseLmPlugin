@@ -1,5 +1,4 @@
-﻿using System;
-using IntegrationLib;
+﻿using IntegrationLib;
 using System.ComponentModel.Composition;
 using System.Windows;
 
@@ -31,13 +30,6 @@ namespace BaseLmPlugin
         }
 
         #endregion
-    } 
-    #endregion
-
-    #region InstanceKey
-    [Serializable()]
-    public class InstanceKey : ApplicationLicenseKeyBase
-    {
     } 
     #endregion
 }

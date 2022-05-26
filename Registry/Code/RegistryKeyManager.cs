@@ -193,28 +193,6 @@ namespace BaseLmPlugin
     }
     #endregion
 
-    #region RegistryLicenseKey
-    [Serializable()]
-    public class RegistryLicenseKey : ApplicationLicenseKeyBase
-    {
-        public override bool IsValid
-        {
-            get
-            {
-                return !string.IsNullOrWhiteSpace(Value);
-            }
-        }
-
-        public override string KeyString
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(Value) ? null : Value.Split(Environment.NewLine.ToCharArray()).FirstOrDefault();
-            }
-        }
-    }
-    #endregion
-
     #region RegistryLicenseManagerSettings
     [Serializable()]
     public class RegistryLicenseManagerSettings : PropertyChangedNotificator, IPluginSettings

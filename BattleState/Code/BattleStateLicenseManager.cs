@@ -98,11 +98,4 @@ namespace BaseLmPlugin
     {
     }
     #endregion
-
-    #region BATTLESTATELICENSEKEY
-    [Serializable()]
-    public class BattleStateLicenseKey : UserNamePasswordLicenseKeyBase
-    {
-    }
-    #endregion    
 }

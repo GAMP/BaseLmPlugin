@@ -202,11 +202,4 @@ namespace BaseLmPlugin
     {
     }
     #endregion
-
-    #region BattlenetLicenseKey
-    [Serializable()]
-    public class BattleNetLicenseKey : UserNamePasswordLicenseKeyBase
-    {
-    }
-    #endregion
 }

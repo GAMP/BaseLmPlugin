@@ -631,11 +631,4 @@ namespace BaseLmPlugin
     {
     }
     #endregion
-
-    #region ORIGINLICENSEKEY
-    [Serializable()]
-    public class OriginLicenseKey : UserNamePasswordLicenseKeyBase
-    {
-    }
-    #endregion    
 }

@@ -25,7 +25,7 @@ namespace BaseLmPlugin
         public MineCraftLicenseManager()
         {
             AppDomain.CurrentDomain.AssemblyResolve += OnJSONAssemblyResolve;
-        } 
+        }
         #endregion
 
         #region FIELDS
@@ -77,10 +77,10 @@ namespace BaseLmPlugin
                 if (key == null)
                     throw new ArgumentNullException("Key");
 
-                if (String.IsNullOrWhiteSpace(key.Username))
+                if (string.IsNullOrWhiteSpace(key.Username))
                     throw new ArgumentNullException("Username");
 
-                if (String.IsNullOrWhiteSpace(key.Password))
+                if (string.IsNullOrWhiteSpace(key.Password))
                     throw new ArgumentNullException("Password");
 
                 #endregion
@@ -96,7 +96,7 @@ namespace BaseLmPlugin
 
                 WebRequest request = WebRequest.Create(API_PATH);
                 request.ContentType = "application/json";
-                request.Method = "POST";            
+                request.Method = "POST";
 
                 try
                 {
@@ -158,7 +158,7 @@ namespace BaseLmPlugin
                     throw;
                 }
 
-              
+
 
                 try
                 {
@@ -168,7 +168,7 @@ namespace BaseLmPlugin
                         using (StreamReader reader = new StreamReader(responseStream))
                         {
                             var respnseString = reader.ReadToEnd();
-                           
+
                         }
                     }
                 }
@@ -238,12 +238,12 @@ namespace BaseLmPlugin
                     if (File.Exists(ACCOUNTS_FILE_PATH))
                         File.Delete(ACCOUNTS_FILE_PATH);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Trace.WriteLine($"Failed deleting {PROFILES_FILE_PATH}, error message {ex.Message}");
                 }
 
-                var output = Newtonsoft.Json.JsonConvert.SerializeObject(launcherProfile,Newtonsoft.Json.Formatting.Indented);
+                var output = Newtonsoft.Json.JsonConvert.SerializeObject(launcherProfile, Newtonsoft.Json.Formatting.Indented);
 
                 //write to configuration file
                 using (var launcher_profile_stream = new FileStream(PROFILES_FILE_PATH, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -311,12 +311,6 @@ namespace BaseLmPlugin
         #endregion
     }
 
-    #region MineCraftLicenseKey
-    [Serializable()]
-    public class MineCraftLicenseKey : UserNamePasswordLicenseKeyBase
-    { } 
-    #endregion
-
     #region LauncherProfile
     [Serializable()]
     [DataContract()]
@@ -324,7 +318,7 @@ namespace BaseLmPlugin
     {
         public LauncherProfile()
         {
-            this.AuthenticationDatabase = new Dictionary<string, Authentication>();
+            AuthenticationDatabase = new Dictionary<string, Authentication>();
         }
 
         [DataMember(Name = "authenticationDatabase", Order = 0)]
@@ -379,7 +373,7 @@ namespace BaseLmPlugin
             get;
             set;
         }
-    } 
+    }
     #endregion
 
     #region Authentication
@@ -416,7 +410,7 @@ namespace BaseLmPlugin
     {
         public AuthenticateRequest()
         {
-            this.Agent = new Agent
+            Agent = new Agent
             {
                 Version = 1,
                 Name = "Minecraft"
@@ -466,7 +460,7 @@ namespace BaseLmPlugin
     {
         public AuthenticateRespnse()
         {
-            this.AvailableProfiles = new List<MinecraftProfile>();
+            AvailableProfiles = new List<MinecraftProfile>();
         }
 
         [DataMember(Name = "availableProfiles")]

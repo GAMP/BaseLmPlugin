@@ -469,11 +469,4 @@ namespace BaseLmPlugin
     {
     }
     #endregion
-
-    #region RIOTLICENSEKEY
-    [Serializable()]
-    public class RiotLicenseKey : UserNamePasswordLicenseKeyBase
-    {
-    }
-    #endregion    
 }

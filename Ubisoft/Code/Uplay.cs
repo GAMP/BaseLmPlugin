@@ -6,7 +6,6 @@ using Microsoft.Win32;
 using System.IO;
 using Client;
 using System.Windows;
-using SharedLib;
 using GizmoShell;
 using CoreLib.Diagnostics;
 using System.Diagnostics;
@@ -292,14 +291,6 @@ namespace BaseLmPlugin
     [Serializable]
     public class UplayLicenseManagerSettings : SteamLicenseManagerSettings, IPluginSettings
     {
-    }
-    #endregion
-
-    #region UplayLicenseKey
-    [Serializable()]
-    public class UplayLicenseKey : UserNamePasswordLicenseKeyBase
-    {
-
     }
     #endregion
 }

@@ -79,13 +79,6 @@ namespace BaseLmPlugin
     }
     #endregion
 
-    #region Key
-    [Serializable()]
-    public class ProcessLicenseKey : ApplicationLicenseKeyBase
-    {
-    }
-    #endregion
-
     #region Settings
     [Serializable()]
     public class ProcessLicenseManagerSettings : PropertyChangedNotificator,

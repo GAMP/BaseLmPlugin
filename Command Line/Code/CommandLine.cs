@@ -105,11 +105,4 @@ namespace BaseLmPlugin
         #endregion
     } 
     #endregion
-
-    #region Key
-    [Serializable()]
-    public class CommandLineLicenseKey : ApplicationLicenseKeyBase
-    {
-    }
-    #endregion
 }

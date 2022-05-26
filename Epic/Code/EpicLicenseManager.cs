@@ -253,11 +253,4 @@ namespace BaseLmPlugin
     {
     }
     #endregion
-
-    #region EPICLICENSEKEY
-    [Serializable()]
-    public class EpicLicenseKey : UserNamePasswordLicenseKeyBase
-    {
-    }
-    #endregion    
 }
