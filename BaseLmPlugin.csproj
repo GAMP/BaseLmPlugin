@@ -43,7 +43,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Epic\arkose.html" />
 		<None Remove="Resources\Icons\battlenet.png" />
 		<None Remove="Resources\Icons\cmd.png" />
 		<None Remove="Resources\Icons\diablo3.png" />
@@ -59,7 +58,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Epic\arkose.html" />
 		<EmbeddedResource Include="Resources\Icons\battlenet.png" />
 		<EmbeddedResource Include="Resources\Icons\cmd.png" />
 		<EmbeddedResource Include="Resources\Icons\diablo3.png" />
