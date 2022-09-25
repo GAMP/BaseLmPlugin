@@ -171,12 +171,12 @@ namespace BaseLmPlugin
 
         #endregion
 
-        public static void SendProcessInput(Process targetProcess, string username, string password)
+        #region FUNCTIONS
+        private static void SendProcessInput(Process targetProcess, string username, string password)
         {
             int SMALL_DELAY = 250;
             int MEDIUM_DELAY = 1500;
             int LARGE_DELAY = 3000;
-            int EXTRA_LARGE_DELAY = 5000;
             int EXTREME_DELAY = 20000;
 
             //default center location based on window size
@@ -254,7 +254,8 @@ namespace BaseLmPlugin
 #endif
             }
 
-        }
+        } 
+        #endregion
     }
     #endregion
 
