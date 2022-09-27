@@ -222,7 +222,7 @@ namespace BaseLmPlugin
                 window.BringToFront();
 
                 var location = window.Location;
-                User32.SetCursorPos(location.X + DEFAULT_X, location.Y + 210);
+                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 210);
                 Thread.Sleep(SMALL_DELAY);
                 mouse.LeftButtonDoubleClick();
                 Thread.Sleep(SMALL_DELAY);
@@ -230,7 +230,7 @@ namespace BaseLmPlugin
                 Thread.Sleep(SMALL_DELAY);
                 keyboard.TextEntry(username);
 
-                User32.SetCursorPos(location.X + DEFAULT_X, location.Y + 255);
+                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 255);
                 Thread.Sleep(SMALL_DELAY);
                 mouse.LeftButtonDoubleClick();
                 Thread.Sleep(SMALL_DELAY);

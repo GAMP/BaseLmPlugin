@@ -413,6 +413,10 @@ namespace BaseLmPlugin
         internal static extern uint GetPrivateProfileString(
             string lpAppName, string lpKeyName, string lpDefault, string lpReturnedString,
             uint nSize, string lpFileName);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetCursorPos([In] int X, [In] int Y);
     }
 
     #endregion
