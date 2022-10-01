@@ -10,6 +10,11 @@ using CoreLib.Diagnostics;
 using System.Threading;
 using Win32API.Modules;
 using WindowsInput;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace BaseLmPlugin
 {
@@ -111,6 +116,19 @@ namespace BaseLmPlugin
                 string COMMAND_LINE = context.Executable.Arguments;
                 string PROCESS_COMMAND_LINE = COMMAND_LINE;
 
+                bool authCodeUsed = false;
+
+                try
+                {
+                    authCodeUsed = true;
+                    var authCode = GetAuthCodeAsync(USERNAME, PASSWORD).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                    //failed to obtain auth code
+                    authCodeUsed = false;
+                }
+
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = executablePath,
@@ -133,11 +151,15 @@ namespace BaseLmPlugin
                 //add the process to tracked process if successfully started
                 if (context.AddProcessIfStarted(originProcess, true))
                 {
-                    //send input to the process window
-                    SendProcessInput(originProcess, USERNAME, PASSWORD);
+                    //if we have not used auth code then automate login proccess
+                    if (!authCodeUsed)
+                    {
+                        //send input to the process window
+                        SendProcessInput(originProcess, USERNAME, PASSWORD);
+                    }
 
                     //executables process creation should not be forced
-                    forceCreation = false;  
+                    forceCreation = false;
                 }
                 else
                 {
@@ -172,6 +194,62 @@ namespace BaseLmPlugin
         #endregion
 
         #region FUNCTIONS
+
+        private static async Task<string> GetAuthCodeAsync(string userName, string password)
+        {
+            var cookieContainer = new CookieContainer();
+            var clienthandler = new HttpClientHandler { AllowAutoRedirect = true, UseCookies = true, CookieContainer = cookieContainer };
+            using (var client = new HttpClient(clienthandler))
+            {
+                var responseString = await client.GetAsync("https://accounts.ea.com/connect/auth?client_id=ORIGIN_PC&response_type=code&redirect_uri=qrc:///html/login_successful.html&nonce=1828")
+                    .ConfigureAwait(false);
+                var url = responseString.RequestMessage.RequestUri.AbsoluteUri;
+
+                var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                var stringChars = new char[32];
+                var random = new Random();
+
+                for (int i = 0; i < stringChars.Length; i++)
+                {
+                    stringChars[i] = chars[random.Next(chars.Length)];
+                }
+
+                var randomCID = new string(stringChars);
+
+                var values = new Dictionary<string, string>
+                {
+                    { "email", userName },
+                    { "regionCode", "EG" },
+                    { "phoneNumber", "" },
+                    { "password", password },
+                    { "_eventId", "submit" },
+                    { "cid", randomCID },
+                    { "showAgeUp", "true" },
+                    { "thirdPartyCaptchaResponse", "" },
+                    { "loginMethod", "emailPassword" },
+                    { "_rememberMe", "on" },
+                    { "rememberMe", "on" },
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                var response = await client.PostAsync(url, content).ConfigureAwait(false);
+                var pageContents = await response.Content.ReadAsStringAsync();
+
+                string search = @"window.location*.*";
+                Match match = Regex.Match(pageContents, search);
+
+                string authUrl = match.Value.Replace("window.location = \"", "");
+                authUrl = authUrl.Replace("\";", "");
+
+                var result = await client.GetAsync(authUrl);
+                var autocode = result.Headers.Location.ToString();
+                autocode = autocode.Replace(@"qrc:/html/login_successful.html?code=", "");
+
+                return autocode;
+            }
+        }
+    
+
         private static void SendProcessInput(Process targetProcess, string username, string password)
         {
             int SMALL_DELAY = 250;
@@ -255,6 +333,8 @@ namespace BaseLmPlugin
             }
 
         } 
+        
+        
         #endregion
     }
     #endregion
