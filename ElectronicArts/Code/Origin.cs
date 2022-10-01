@@ -113,21 +113,44 @@ namespace BaseLmPlugin
 
                 #region INITIALIZE PROCESS
 
-                string COMMAND_LINE = context.Executable.Arguments;
-                string PROCESS_COMMAND_LINE = COMMAND_LINE;
-
-                bool authCodeUsed = false;
+                bool AUTH_CODE_OBTAINED = false;
+                string AUTH_CODE = null;
 
                 try
-                {
-                    authCodeUsed = true;
-                    var authCode = GetAuthCodeAsync(USERNAME, PASSWORD).GetAwaiter().GetResult();
+                {                    
+                    AUTH_CODE = GetAuthCodeAsync(USERNAME, PASSWORD).GetAwaiter().GetResult();
+                    AUTH_CODE_OBTAINED = true;
                 }
                 catch
                 {
                     //failed to obtain auth code
-                    authCodeUsed = false;
+                    AUTH_CODE_OBTAINED = false;
                 }
+
+                //get current command line
+                string COMMAND_LINE = context.Executable.Arguments;
+
+                //check if command line is empty
+                if(!string.IsNullOrWhiteSpace(COMMAND_LINE))
+                {
+                    COMMAND_LINE = Environment.ExpandEnvironmentVariables(COMMAND_LINE);
+                }
+
+                //by default use the current command line parameters
+                string PROCESS_COMMAND_LINE = COMMAND_LINE;
+
+                //check if we got auth code and update current command line arguments
+                if (AUTH_CODE_OBTAINED)
+                {
+                    if (!string.IsNullOrWhiteSpace(COMMAND_LINE))
+                    {
+                        PROCESS_COMMAND_LINE = $"{COMMAND_LINE}&authCode={AUTH_CODE}";
+                    }
+                    else
+                    {
+                        PROCESS_COMMAND_LINE = $"origin2://library/open?&authCode={AUTH_CODE}";
+                    }
+                }               
 
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
@@ -152,7 +175,7 @@ namespace BaseLmPlugin
                 if (context.AddProcessIfStarted(originProcess, true))
                 {
                     //if we have not used auth code then automate login proccess
-                    if (!authCodeUsed)
+                    if (!AUTH_CODE_OBTAINED)
                     {
                         //send input to the process window
                         SendProcessInput(originProcess, USERNAME, PASSWORD);
@@ -219,7 +242,7 @@ namespace BaseLmPlugin
                 var values = new Dictionary<string, string>
                 {
                     { "email", userName },
-                    { "regionCode", "EG" },
+                    { "regionCode", "US" },
                     { "phoneNumber", "" },
                     { "password", password },
                     { "_eventId", "submit" },
