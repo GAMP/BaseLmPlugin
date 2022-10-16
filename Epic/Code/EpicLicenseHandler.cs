@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Win32API.Modules;
 using WindowsInput;
 
@@ -29,23 +28,20 @@ namespace BaseLmPlugin
 
         #region FUNCTIONS
 
-        public static async Task<EpicInitResult> InitiateAsync(EpicInitParameters parameters,IExecutionContext cx, CancellationToken ct = default)
+        public static EpicInitResult Initiate(EpicInitParameters parameters, IExecutionContext cx)
         {
             if (cx == null)
                 throw new ArgumentNullException(nameof(cx));
 
             try
             {
-                //check if cancellation was requested
-                if (!ct.IsCancellationRequested)
-                {
-                    //try simulation method
-                    var createdProcess = await StartEpicProcess(parameters.FilePath, parameters.Arguments, parameters.WorkingDirectory, parameters.Username, parameters.Password,cx);
+                //try simulation method
+                var createdProcess = StartEpicProcess(parameters.FilePath, parameters.Arguments, parameters.WorkingDirectory, parameters.Username, parameters.Password, cx);
 
-                    //check if process have started
-                    if (createdProcess != null)
-                        return new EpicInitResult(createdProcess);
-                }
+                //check if process have started
+                if (createdProcess != null)
+                    return new EpicInitResult(createdProcess);
+
             }
             catch (Exception ex)
             {
@@ -53,15 +49,11 @@ namespace BaseLmPlugin
                 return new EpicInitResult(ex);
             }
 
-            //check for cancelation
-            if (ct.IsCancellationRequested)
-                return new EpicInitResult(EpicInitResultCode.Canceled);
-
             //reuturn erro result
             return new EpicInitResult();
-        }      
+        }
 
-        public static async Task<Process> StartEpicProcess(string fileName, string arguments, string workingDirectory, string username, string password, IExecutionContext cx)
+        public static Process StartEpicProcess(string fileName, string arguments, string workingDirectory, string username, string password, IExecutionContext cx)
         {
             try
             {
@@ -122,7 +114,7 @@ namespace BaseLmPlugin
             {
 #if RELEASE
                 //block user input
-                User32.BlockInput(true); 
+                User32.BlockInput(true);
 #endif
 
                 //check if window is minimized and restore it
@@ -132,18 +124,20 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                //add medium dealy to allow window to activate
-                Thread.Sleep(MEDIUM_DELAY);
-
                 //the color of the first pixel in the EPIC internal window
                 var fieldColor = Color.FromArgb(255, 32, 32, 32);
 
                 //wait for the target pixel to be created
-                var pixel = await WaitForPixelAsync(window.Handle, fieldColor, null, null, 50, 100);
+                var pixel = WaitForPixel(window.Handle, fieldColor, null, null, 50, 100);
 
                 //check if pixel is found
                 if (pixel == null)
-                    return null;
+                {
+                    //even if we did not find the correct pixel proceed anyway
+                }
+
+                //add large dealy to allow window to activate/initialize
+                Thread.Sleep(LARGE_DELAY);
 
                 //bring main window to front
                 window.BringToFront();
@@ -196,7 +190,7 @@ namespace BaseLmPlugin
                 var loginButtonColor = Color.FromArgb(255, 0, 116, 228);
 
                 //wait for the target pixel to be created
-                pixel = await WaitForPixelAsync(window.Handle, loginButtonColor, null, null, 50, 250);
+                pixel = WaitForPixel(window.Handle, loginButtonColor, null, null, 50, 250);
 
                 //check if pixel is found
                 if (pixel == null)
@@ -221,14 +215,14 @@ namespace BaseLmPlugin
             {
 #if RELEASE
                 //unlock user input
-                User32.BlockInput(false); 
+                User32.BlockInput(false);
 #endif
             }
 
             return targetProcess;
         }
 
-        private static async Task<Pixel> WaitForPixelAsync(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250, CancellationToken ct = default)
+        private static Pixel WaitForPixel(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250)
         {
             if (windowHandle == IntPtr.Zero)
                 throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
@@ -252,8 +246,6 @@ namespace BaseLmPlugin
 
                     if (foundPixel != null)
                         return foundPixel;
-
-                    await Task.Delay(delay, ct).ConfigureAwait(false);
                 }
             }
 
@@ -400,7 +392,7 @@ namespace BaseLmPlugin
         #endregion
     }
     #endregion
- 
+
     #region WIN32
 
     class NativeMethods

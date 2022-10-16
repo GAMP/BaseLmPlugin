@@ -7,6 +7,11 @@ using Client;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
+using System.Threading;
+using Win32API.Modules;
+using WindowsInput;
+using CoreLib.Diagnostics;
+using System.Linq;
 
 namespace BaseLmPlugin
 {
@@ -88,7 +93,51 @@ namespace BaseLmPlugin
                     arguments = Environment.ExpandEnvironmentVariables(arguments);
 
                 //create custom arguments based on login configuration
-                arguments = string.Format("-login {0} {1} {2}", key.Username, key.Password, arguments);
+                arguments = string.Format("-noreactlogin -login {0} {1} {2}", key.Username, key.Password, arguments);
+
+                #region KILL EXISTING
+
+                try
+                {
+                    //get process name
+                    string processName = Path.GetFileNameWithoutExtension(executablePath);
+
+                    //get existing main steam process
+                    var mainSteamProcess = Process.GetProcessesByName(processName)
+                        .Where(x => string.Compare(x.MainModule.FileName, executablePath, true) == 0)
+                        .FirstOrDefault();
+
+                    //check if main steam process found
+                    if (mainSteamProcess != null)
+                    {
+                        //terminate any child processes
+                        CoreProcess.KillChildren(mainSteamProcess.Id);
+                        mainSteamProcess.Kill();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    context.WriteMessage($"Could not terminate existing steam process tree. Error :{ex.Message}.");
+                }
+
+                #endregion
+
+                #region DELETE AUTO LOGIN DATA
+
+                try
+                {
+                    var autoLoginFileName = Path.Combine(workingDirectory, "config", "loginusers.vdf");
+                    if (File.Exists(autoLoginFileName))
+                    {
+                        File.Delete(autoLoginFileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    context.WriteMessage($"Could not delete steam auto login file. Error :{ex.Message}.");
+                }
+
+                #endregion
 
                 //initialize steam process
                 var streamProcess = new Process();
@@ -114,6 +163,9 @@ namespace BaseLmPlugin
                     //set LICENSEKEYUSERID environment variable
                     if (!string.IsNullOrWhiteSpace(key.AccountId))
                         Environment.SetEnvironmentVariable("LICENSEKEYUSERID", key.AccountId);
+
+                    ////send proccess input
+                    //SendProcessInput(streamProcess,key.Username,key.Password);
                 }
                 else
                 {
@@ -370,6 +422,90 @@ namespace BaseLmPlugin
         }
 
         #endregion
+
+        private static void SendProcessInput(Process targetProcess, string username, string password)
+        {
+            int SMALL_DELAY = 250;
+            int MEDIUM_DELAY = 1500;
+            int LARGE_DELAY = 3000;
+            int EXTREME_DELAY = 20000;
+
+            //default center location based on window size
+            int DEFAULT_X = 300;
+
+            //wait for the process window to be created
+            if (CoreProcess.WaitForWindowCreated(targetProcess.Id, EXTREME_DELAY) == false)
+                return;
+
+            //add a large delay so the main window can initialize
+            Thread.Sleep(LARGE_DELAY);
+
+            //get the main window instance
+            GizmoShell.WindowInfo window = new(targetProcess.MainWindowHandle);
+
+            try
+            {
+#if RELEASE
+                //block user input
+                User32.BlockInput(true);
+                User32.ShowCursor(false);
+#endif
+                //check if window is minimized and restore it
+                if (window.IsMinimized)
+                    User32.ShowWindow(window.Handle, Win32API.Headers.WinUser.Enumerations.SW.SW_RESTORE);
+
+                //bring main window to front
+                window.BringToFront();
+
+                //add medium dealy to allow window to activate
+                Thread.Sleep(MEDIUM_DELAY);
+
+                //bring main window to front
+                window.BringToFront();
+
+                //create simulators
+                KeyboardSimulator keyboard = new();
+                MouseSimulator mouse = new();
+
+                //initial screen
+                Thread.Sleep(SMALL_DELAY);
+                //bring main window to front
+                window.BringToFront();
+
+                var location = window.Location;
+                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 140);
+                Thread.Sleep(SMALL_DELAY);
+                mouse.LeftButtonDoubleClick();
+                Thread.Sleep(SMALL_DELAY);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
+                Thread.Sleep(SMALL_DELAY);
+                keyboard.TextEntry(username);
+
+                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 220);
+                Thread.Sleep(SMALL_DELAY);
+                mouse.LeftButtonDoubleClick();
+                Thread.Sleep(SMALL_DELAY);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
+                Thread.Sleep(SMALL_DELAY);
+                keyboard.TextEntry(password);
+
+                //send enter key to initiate login
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+#if RELEASE
+                //unlock user input
+                User32.BlockInput(false);
+                User32.ShowCursor(true);
+#endif
+            }
+
+        }
     }
     #endregion
 

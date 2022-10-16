@@ -117,7 +117,7 @@ namespace BaseLmPlugin
                 string AUTH_CODE = null;
 
                 try
-                {                    
+                {
                     AUTH_CODE = GetAuthCodeAsync(USERNAME, PASSWORD).GetAwaiter().GetResult();
                     AUTH_CODE_OBTAINED = true;
                 }
@@ -131,7 +131,7 @@ namespace BaseLmPlugin
                 string COMMAND_LINE = context.Executable.Arguments;
 
                 //check if command line is empty
-                if(!string.IsNullOrWhiteSpace(COMMAND_LINE))
+                if (!string.IsNullOrWhiteSpace(COMMAND_LINE))
                 {
                     COMMAND_LINE = Environment.ExpandEnvironmentVariables(COMMAND_LINE);
                 }
@@ -150,7 +150,7 @@ namespace BaseLmPlugin
                     {
                         PROCESS_COMMAND_LINE = $"origin2://library/open?&authCode={AUTH_CODE}";
                     }
-                }               
+                }
 
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
@@ -221,57 +221,63 @@ namespace BaseLmPlugin
         private static async Task<string> GetAuthCodeAsync(string userName, string password)
         {
             var cookieContainer = new CookieContainer();
-            var clienthandler = new HttpClientHandler { AllowAutoRedirect = true, UseCookies = true, CookieContainer = cookieContainer };
-            using (var client = new HttpClient(clienthandler))
+            using (var clienthandler = new HttpClientHandler
             {
-                var responseString = await client.GetAsync("https://accounts.ea.com/connect/auth?client_id=ORIGIN_PC&response_type=code&redirect_uri=qrc:///html/login_successful.html&nonce=1828")
-                    .ConfigureAwait(false);
-                var url = responseString.RequestMessage.RequestUri.AbsoluteUri;
-
-                var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                var stringChars = new char[32];
-                var random = new Random();
-
-                for (int i = 0; i < stringChars.Length; i++)
+                AllowAutoRedirect = true,
+                UseCookies = true,
+                CookieContainer = cookieContainer
+            })
+            {
+                using (var client = new HttpClient(clienthandler))
                 {
-                    stringChars[i] = chars[random.Next(chars.Length)];
+                    var responseString = await client.GetAsync("https://accounts.ea.com/connect/auth?client_id=ORIGIN_PC&response_type=code&redirect_uri=qrc:///html/login_successful.html&nonce=1828")
+                        .ConfigureAwait(false);
+                    var url = responseString.RequestMessage.RequestUri.AbsoluteUri;
+
+                    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    var stringChars = new char[32];
+                    var random = new Random();
+
+                    for (int i = 0; i < stringChars.Length; i++)
+                    {
+                        stringChars[i] = chars[random.Next(chars.Length)];
+                    }
+
+                    var randomCID = new string(stringChars);
+
+                    var values = new Dictionary<string, string>
+                    {
+                        { "email", userName },
+                        { "regionCode", "US" },
+                        { "phoneNumber", "" },
+                        { "password", password },
+                        { "_eventId", "submit" },
+                        { "cid", randomCID },
+                        { "showAgeUp", "true" },
+                        { "thirdPartyCaptchaResponse", "" },
+                        { "loginMethod", "emailPassword" },
+                        { "_rememberMe", "on" },
+                        { "rememberMe", "on" },
+                    };
+
+                    var content = new FormUrlEncodedContent(values);
+                    var response = await client.PostAsync(url, content).ConfigureAwait(false);
+                    var pageContents = await response.Content.ReadAsStringAsync();
+
+                    string search = @"window.location*.*";
+                    Match match = Regex.Match(pageContents, search);
+
+                    string authUrl = match.Value.Replace("window.location = \"", "");
+                    authUrl = authUrl.Replace("\";", "");
+
+                    var result = await client.GetAsync(authUrl);
+                    var autocode = result.Headers.Location.ToString();
+                    autocode = autocode.Replace(@"qrc:/html/login_successful.html?code=", "");
+
+                    return autocode;
                 }
-
-                var randomCID = new string(stringChars);
-
-                var values = new Dictionary<string, string>
-                {
-                    { "email", userName },
-                    { "regionCode", "US" },
-                    { "phoneNumber", "" },
-                    { "password", password },
-                    { "_eventId", "submit" },
-                    { "cid", randomCID },
-                    { "showAgeUp", "true" },
-                    { "thirdPartyCaptchaResponse", "" },
-                    { "loginMethod", "emailPassword" },
-                    { "_rememberMe", "on" },
-                    { "rememberMe", "on" },
-                };
-
-                var content = new FormUrlEncodedContent(values);
-                var response = await client.PostAsync(url, content).ConfigureAwait(false);
-                var pageContents = await response.Content.ReadAsStringAsync();
-
-                string search = @"window.location*.*";
-                Match match = Regex.Match(pageContents, search);
-
-                string authUrl = match.Value.Replace("window.location = \"", "");
-                authUrl = authUrl.Replace("\";", "");
-
-                var result = await client.GetAsync(authUrl);
-                var autocode = result.Headers.Location.ToString();
-                autocode = autocode.Replace(@"qrc:/html/login_successful.html?code=", "");
-
-                return autocode;
             }
         }
-    
 
         private static void SendProcessInput(Process targetProcess, string username, string password)
         {
@@ -355,9 +361,9 @@ namespace BaseLmPlugin
 #endif
             }
 
-        } 
-        
-        
+        }
+
+
         #endregion
     }
     #endregion

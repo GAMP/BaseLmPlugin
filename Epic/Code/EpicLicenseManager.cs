@@ -93,8 +93,8 @@ namespace BaseLmPlugin
                     }
                     catch
                     {
-                    //ignore errors
-                }
+                        //ignore errors
+                    }
                 });
 
                 var userStateEventHandler = new EventHandler<UserEventArgs>((o, e) =>
@@ -106,8 +106,8 @@ namespace BaseLmPlugin
                     }
                     catch
                     {
-                    //ignore errors
-                }
+                        //ignore errors
+                    }
                 });
 
                 try
@@ -118,9 +118,7 @@ namespace BaseLmPlugin
                     context.ExecutionStateChaged += contextStateEventHandler;
                     context.Client.LoginStateChange += userStateEventHandler;
 
-                    var result = EpicLicenseHandler.InitiateAsync(epicInitParameters, context, cancellationTokenSource.Token)
-                        .GetAwaiter()
-                        .GetResult();
+                    var result = EpicLicenseHandler.Initiate(epicInitParameters, context);
 
                     if (result.InitResult == EpicInitResultCode.Success)
                     {
