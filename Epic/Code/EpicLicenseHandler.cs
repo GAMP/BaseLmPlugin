@@ -69,7 +69,7 @@ namespace BaseLmPlugin
 
             int SMALL_DELAY = 1000;
             int MEDIUM_DELAY = 1500;
-            int LARGE_DELAY = 3000;
+            int LARGE_DELAY = 10000;
             int EXTRA_LARGE_DELAY = 5000;
             int EXTREME_DELAY = 20000;
 
