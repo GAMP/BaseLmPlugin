@@ -23,6 +23,8 @@ namespace BaseLmPlugin
     public class EADesktopLicenseManager : SteamLicenseManager,
         IExecutionDivertPlugin
     {
+        readonly string[] processKillList = new[] { "EALauncher", "EALaunchHelper", "EADesktop" };
+
         #region INTERFACE
 
         public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
@@ -98,6 +100,28 @@ namespace BaseLmPlugin
                 if (eaDesktopProcess != null)
                     eaDesktopProcess.Kill();
 
+                try
+                {
+                    var terminateList = Process.GetProcesses()
+                        .Where(process => processKillList.Any(processName => string.Compare(process.ProcessName, processName, true) == 0))
+                        .ToList();
+
+                    foreach(var process in terminateList)
+                    {
+                        try
+                        {
+                            process.Kill();
+                        }catch
+                        {
+
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
+
                 #endregion
 
                 #region INITIALIZE PROCESS
@@ -137,7 +161,7 @@ namespace BaseLmPlugin
                     }
                     else
                     {
-                        PROCESS_COMMAND_LINE = $"authCode={AUTH_CODE}";
+                        PROCESS_COMMAND_LINE = $"origin2://library/open?&authCode={AUTH_CODE}";
                     }
                 }
 
@@ -219,7 +243,7 @@ namespace BaseLmPlugin
             {
                 using (var client = new HttpClient(clienthandler))
                 {
-                    var responseString = await client.GetAsync("https://accounts.ea.com/connect/auth?client_id=ORIGIN_PC&response_type=code&redirect_uri=qrc:///html/login_successful.html&nonce=1828")
+                    var responseString = await client.GetAsync("https://accounts.ea.com/connect/auth?client_id=JUNO_PC_CLIENT&response_type=code&redirect_uri=qrc:///html/login_successful.html&nonce=1828&pc_sign=eyJhdiI6InYxIiwiYnNuIjoiRGVmYXVsdCBzdHJpbmciLCJnaWQiOjE4MDQ4LCJoc24iOiIwMDAwXzAwMDBfMDAwMF8wMDAwXzAwMjZfQjcyOF8yQThBXzQzRTUuIiwibWFjIjoiJDRjNzk2ZWU1NWQ0MCIsIm1pZCI6IjE2Nzk5NTYyMDkyNjkxNjY0OTAwIiwibXNuIjoiRGVmYXVsdCBzdHJpbmciLCJzdiI6InYyIiwidHMiOiIyMDIzLTEtMTYgMTY6Mzk6MjI6NDI1In0.qG10gMPTorO2iv4EiXQz8GEfaV8hR8OBX1x8_rTVVMA")
                         .ConfigureAwait(false);
                     var url = responseString.RequestMessage.RequestUri.AbsoluteUri;
 
