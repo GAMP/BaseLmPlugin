@@ -100,26 +100,29 @@ namespace BaseLmPlugin
                 if (eaDesktopProcess != null)
                     eaDesktopProcess.Kill();
 
+                //terminate any potential unwanted processes
+                //if one of such processes might be running the login procedure will fail
                 try
                 {
                     var terminateList = Process.GetProcesses()
                         .Where(process => processKillList.Any(processName => string.Compare(process.ProcessName, processName, true) == 0))
                         .ToList();
 
-                    foreach(var process in terminateList)
+                    foreach (var process in terminateList)
                     {
                         try
                         {
                             process.Kill();
-                        }catch
+                        }
+                        catch
                         {
-
+                           //failed to terminate process
                         }
                     }
                 }
                 catch
                 {
-
+                    //failed to obtain termination list
                 }
 
                 #endregion
