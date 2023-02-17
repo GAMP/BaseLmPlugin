@@ -14,6 +14,10 @@ using System.Net.Http;
 using System.Net;
 using System.Text.RegularExpressions;
 using Win32API.Modules;
+using System.Windows.Markup;
+using Newtonsoft.Json;
+using System.Runtime.Serialization;
+using WindowsInput;
 
 namespace BaseLmPlugin
 {
@@ -116,7 +120,7 @@ namespace BaseLmPlugin
                         }
                         catch
                         {
-                           //failed to terminate process
+                            //failed to terminate process
                         }
                     }
                 }
@@ -127,6 +131,22 @@ namespace BaseLmPlugin
 
                 #endregion
 
+                #region AUTOLOGIN CLEAR
+                //delete any cookie files to avoid remember me
+                try
+                {
+                    var cookieFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Electronic Arts\EA Desktop\cookie.ini");
+                    if (File.Exists(cookieFileName))
+                    {
+                        File.Delete(cookieFileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    context.WriteMessage($"Failed deleting EA Desktop cookie file. {ex.Message}");
+                } 
+                #endregion
+
                 #region INITIALIZE PROCESS
 
                 bool AUTH_CODE_OBTAINED = false;
@@ -134,7 +154,7 @@ namespace BaseLmPlugin
 
                 try
                 {
-                    AUTH_CODE = GetAuthCodeAsync(USERNAME, PASSWORD).GetAwaiter().GetResult();
+                    AUTH_CODE = GetAuthCode2Async(USERNAME, PASSWORD).GetAwaiter().GetResult();
                     AUTH_CODE_OBTAINED = true;
                 }
                 catch
@@ -194,7 +214,7 @@ namespace BaseLmPlugin
                     if (!AUTH_CODE_OBTAINED)
                     {
                         //send input to the process window
-                        SendProcessInput(eaDesktopProcess, USERNAME, PASSWORD);
+                        SendProcessInput(USERNAME, PASSWORD);
                     }
 
                     //executables process creation should not be forced
@@ -295,17 +315,119 @@ namespace BaseLmPlugin
             }
         }
 
-        private static void SendProcessInput(Process targetProcess, string username, string password)
+        private static async Task<string> GetAuthCode2Async(string userName, string password)
         {
-            int LARGE_DELAY = 3000;
-            int EXTREME_DELAY = 20000;
+            throw new Exception();
+            string pc_sign = "eyJhdiI6InYxIiwiYnNuIjoiRGVmYXVsdCBzdHJpbmciLCJnaWQiOjE4MDQ4LCJoc24iOiIwMDAwXzAwMDBfMDAwMF8wMDAwXzAwMjZfQjcyOF8yQThBXzQzRTUuIiwibWFjIjoiJDRjNzk2ZWU1NWQ0MCIsIm1pZCI6IjE2Nzk5NTYyMDkyNjkxNjY0OTAwIiwibXNuIjoiRGVmYXVsdCBzdHJpbmciLCJzdiI6InYyIiwidHMiOiIyMDIzLTItMTcgNzozNzozMDo5OTUifQ.2bc2T6CgCN3hzXFpeUCU5Xmo2OkXNGNEDNd8A4_OwKY";
+            string code_challenge = "lOvMgdYrkqnvSIiU6Tp4Srk4FPVxDUdfkENA9ZvFkpc";
 
-            //wait for the process window to be created
-            if (CoreProcess.WaitForWindowCreated(targetProcess.Id, EXTREME_DELAY) == false)
+            var cookieContainer = new CookieContainer();
+            using (var clienthandler = new HttpClientHandler
+            {
+                AllowAutoRedirect = true,
+                UseCookies = true,
+                CookieContainer = cookieContainer
+            })
+            {
+                using (var client = new HttpClient(clienthandler))
+                {
+                    //initiate connect request
+                    var challengeResponse = await client.GetAsync($"https://accounts.ea.com/connect/auth?code_challenge={code_challenge}&code_challenge_method=S256&client_id=JUNO_PC_CLIENT&response_type=code%20id_token&redirect_uri=qrc:///html/login_successful.html&display=junoClient/login&locale=en_US&nonce=-618605523&pc_sign={pc_sign}&sbiod_enabled=true")
+                        .ConfigureAwait(false);
+
+
+                    var url = challengeResponse.RequestMessage.RequestUri.AbsoluteUri;
+
+                    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    var stringChars = new char[32];
+                    var random = new Random();
+
+                    for (int i = 0; i < stringChars.Length; i++)
+                    {
+                        stringChars[i] = chars[random.Next(chars.Length)];
+                    }
+
+                    var randomCID = new string(stringChars);
+
+                    var values = new Dictionary<string, string>
+                    {
+                        { "email", userName },
+                        { "regionCode", "US" },
+                        { "phoneNumber", "" },
+                        { "password", password },
+                        { "_eventId", "submit" },
+                        { "cid", randomCID },
+                        { "showAgeUp", "true" },
+                        { "thirdPartyCaptchaResponse", "" },
+                        { "loginMethod", "emailPassword" },
+                        { "_rememberMe", "on" },
+                        { "rememberMe", "on" },
+                    };
+
+                    var content = new FormUrlEncodedContent(values);
+                    var response = await client.PostAsync(url, content).ConfigureAwait(false);
+                    var pageContents = await response.Content.ReadAsStringAsync();
+
+                    string search = @"window.location*.*";
+                    Match match = Regex.Match(pageContents, search);
+
+                    string authUrl = match.Value.Replace("window.location = \"", "");
+                    authUrl = authUrl.Replace("\";", "");
+
+                    var result = await client.GetAsync(authUrl);
+                    var autocode = result.Headers.Location.ToString();
+
+                    int codeValueStartIndex = autocode.IndexOf("code=") + "code=".Length;
+                    int idTokenStartIndex = autocode.IndexOf("&id_token");
+                    int codeLength = idTokenStartIndex - codeValueStartIndex;
+                    var code = autocode.Substring(codeValueStartIndex, codeLength);
+                    autocode = autocode.Replace(@"qrc:/html/login_successful.html#?code=", "");
+
+                    Dictionary<string, string> tokenContent = new Dictionary<string, string>()
+                    {
+                        {"grant_type", "authorization_code" },
+                        {"code", code },
+                        {"code_verifier","42aYB8Af-wjcuOC85XawYqB4-_h3MVga2vUEzo_vaLE" },
+                        { "client_id", "JUNO_PC_CLIENT"},
+                        {"client_secret","4mRLtYMb6vq9qglomWEaT4ChxsXWcyqbQpuBNfMPOYOiDmYYQmjuaBsF2Zp0RyVeWkfqhE9TuGgAw7te" },
+                        {"redirect_uri","qrc:///html/login_successful.html" }
+                    };
+                    var postResult = await client.PostAsync("https://accounts.ea.com/connect/token", new FormUrlEncodedContent(tokenContent));
+                    var resultString = await postResult.Content.ReadAsStringAsync();
+                    var token = JsonConvert.DeserializeObject<EADesktopToken>(resultString);
+                    return code;
+                }
+            }
+        }
+
+        private static void SendProcessInput(string username, string password)
+        {
+            int LARGE_DELAY = 5000;
+            int EXTREME_DELAY = 30000;
+
+            if (!CoreProcess.WaitForProcessCreated("EADesktop", EXTREME_DELAY, false))
+            {
+                //ea desktop process was not created within timeout
+            }
+
+            var eaDesktopProcess = Process.GetProcessesByName("EADesktop");
+
+            Process targetProcess = null;
+
+            foreach (var eaProcess in eaDesktopProcess)
+            {
+                if (CoreProcess.WaitForWindowCreated(eaProcess, EXTREME_DELAY, false))
+                {
+                    targetProcess = eaProcess;
+                    break;
+                }
+            }
+
+            if (targetProcess == null)
+            {
+                //no ea desktop process with window where found
                 return;
-
-            //add a large delay so the main window can initialize
-            Thread.Sleep(LARGE_DELAY);
+            }
 
             //get the main window instance
             GizmoShell.WindowInfo window = new(targetProcess.MainWindowHandle);
@@ -317,8 +439,26 @@ namespace BaseLmPlugin
                 User32.BlockInput(true);
                 User32.ShowCursor(false);
 #endif
+                //add a large delay so the main window can initialize
+                Thread.Sleep(LARGE_DELAY);
 
-                //TODO : Implement input based login
+                //check if window is minimized and restore it
+                if (window.IsMinimized)
+                    User32.ShowWindow(window.Handle, Win32API.Headers.WinUser.Enumerations.SW.SW_RESTORE);
+
+                //bring main window to front
+                window.BringToFront();
+
+                //create simulators
+                KeyboardSimulator keyboard = new();
+
+                //bring main window to front
+                window.BringToFront();
+
+                keyboard.TextEntry(username);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.TextEntry(password);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
             }
             catch
             {
@@ -331,14 +471,24 @@ namespace BaseLmPlugin
                 User32.BlockInput(false);
                 User32.ShowCursor(true);
 #endif
-            }
 
+            }
         }
 
+        private class EADesktopToken
+        {
+            public string access_token { get; set; }
+            public string token_type { get; set; }
+            public int expires_in { get; set; }
+            public string refresh_token { get; set; }
+            public string id_token { get; set; }
+        }
 
         #endregion
     }
     #endregion
+
+
 
     #region EADesktopManagerSettings
     [Serializable]
