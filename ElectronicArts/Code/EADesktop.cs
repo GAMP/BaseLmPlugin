@@ -404,6 +404,9 @@ namespace BaseLmPlugin
         {
             int LARGE_DELAY = 5000;
             int EXTREME_DELAY = 30000;
+            int SMALL_DELAY = 250;
+            //default center location based on window size
+            int DEFAULT_X = 250;
 
             if (!CoreProcess.WaitForProcessCreated("EADesktop", EXTREME_DELAY, false))
             {
@@ -451,11 +454,20 @@ namespace BaseLmPlugin
 
                 //create simulators
                 KeyboardSimulator keyboard = new();
+                MouseSimulator mouse = new();
 
                 //bring main window to front
                 window.BringToFront();
 
+                var location = window.Location;
+                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 400);
+                Thread.Sleep(SMALL_DELAY);
+                mouse.LeftButtonDoubleClick();
+                Thread.Sleep(SMALL_DELAY);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.TextEntry(username);
+
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
                 keyboard.TextEntry(password);
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
