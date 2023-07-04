@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Input;
 using Win32API.Modules;
 using WindowsInput;
 
@@ -68,10 +69,8 @@ namespace BaseLmPlugin
             }
 
             int SMALL_DELAY = 1000;
-            int MEDIUM_DELAY = 1500;
-            int LARGE_DELAY = 10000;
-            int EXTRA_LARGE_DELAY = 5000;
-            int EXTREME_DELAY = 20000;
+            int MEDIUM_DELAY = 5000;
+            int LARGE_DELAY = 15000;
 
             //create a start info for the new process
             var startInfo = new ProcessStartInfo()
@@ -101,11 +100,8 @@ namespace BaseLmPlugin
                 return null;
 
             //wait for the process window to be created
-            if (CoreProcess.WaitForWindowCreated(targetProcess.Id, EXTREME_DELAY) == false)
+            if (CoreProcess.WaitForWindowCreated(targetProcess.Id, LARGE_DELAY) == false)
                 return null;
-
-            //add a large delay so the main window can initialize
-            Thread.Sleep(LARGE_DELAY);
 
             //get the main window instance
             WindowInfo window = new(targetProcess.MainWindowHandle);
@@ -114,7 +110,7 @@ namespace BaseLmPlugin
             {
 #if RELEASE
                 //block user input
-                User32.BlockInput(true);
+                User32.BlockInput(true);               
 #endif
 
                 //check if window is minimized and restore it
@@ -128,7 +124,7 @@ namespace BaseLmPlugin
                 var fieldColor = Color.FromArgb(255, 32, 32, 32);
 
                 //wait for the target pixel to be created
-                var pixel = WaitForPixel(window.Handle, fieldColor, null, null, 50, 100);
+                var pixel = WaitForPixel(window.Handle, fieldColor, null, null, 50, 250);
 
                 //check if pixel is found
                 if (pixel == null)
@@ -136,36 +132,21 @@ namespace BaseLmPlugin
                     //even if we did not find the correct pixel proceed anyway
                 }
 
-                //add large dealy to allow window to activate/initialize
-                Thread.Sleep(LARGE_DELAY);
-
-                //bring main window to front
-                window.BringToFront();
-
                 //create simulators
                 KeyboardSimulator keyboard = new KeyboardSimulator();
                 MouseSimulator mouse = new MouseSimulator();
 
-                //initial screen
-                Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
                 //bring main window to front
                 window.BringToFront();
 
-                Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-                //bring main window to front
-                window.BringToFront();
+                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + 100, window.Location.Y + 100);
 
                 Thread.Sleep(SMALL_DELAY);
+                mouse.LeftButtonClick();
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-                //bring main window to front
-                window.BringToFront();
-
                 Thread.Sleep(SMALL_DELAY);
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
-                //bring main window to front
-                window.BringToFront();
 
                 //login screen
 
@@ -199,13 +180,13 @@ namespace BaseLmPlugin
                 }
 
                 //the login button some times takes more time to respons so a delay is required
-                Thread.Sleep(LARGE_DELAY);
+                Thread.Sleep(SMALL_DELAY);
 
                 //send enter key to initiate login
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
 
                 //keep the keyboard locked for little more time so the password copying would not be possible
-                Thread.Sleep(EXTRA_LARGE_DELAY);
+                Thread.Sleep(MEDIUM_DELAY);
             }
             catch
             {
@@ -246,6 +227,8 @@ namespace BaseLmPlugin
 
                     if (foundPixel != null)
                         return foundPixel;
+
+                    Thread.Sleep(delay);
                 }
             }
 
