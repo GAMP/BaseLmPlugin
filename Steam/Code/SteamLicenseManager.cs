@@ -93,7 +93,7 @@ namespace BaseLmPlugin
                     arguments = Environment.ExpandEnvironmentVariables(arguments);
 
                 //create custom arguments based on login configuration
-                arguments = string.Format("-noreactlogin -login {0} {1} {2}", key.Username, key.Password, arguments);
+                arguments = string.Format("-login {0} {1} {2}", key.Username, key.Password, arguments);
 
                 #region KILL EXISTING
 
