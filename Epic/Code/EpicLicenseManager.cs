@@ -1,4 +1,5 @@
 ﻿using Client;
+using Gizmo.Client;
 using IntegrationLib;
 using System;
 using System.ComponentModel;
@@ -97,11 +98,11 @@ namespace BaseLmPlugin
                     }
                 });
 
-                var userStateEventHandler = new EventHandler<UserEventArgs>((o, e) =>
+                var userStateEventHandler = new EventHandler<UserLoginStateChangeEventArgs>((o, e) =>
                 {
                     try
                     {
-                        if (e.State == SharedLib.LoginState.LoggingOut)
+                        if (e.State ==  Gizmo.LoginState.LoggingOut)
                             cancellationTokenSource.Cancel();
                     }
                     catch

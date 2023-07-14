@@ -25,16 +25,13 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\CoreLib\CoreLib\CoreLib.csproj" />
 		<ProjectReference Include="..\..\..\DataInterfaces\DataInterfaces\DataInterfaces.csproj" />
+		<ProjectReference Include="..\..\..\Gizmo.Shared\Gizmo.Shared.csproj" />
 		<ProjectReference Include="..\..\..\Gizmo.Shell\Gizmo.Shell\Gizmo.Shell.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="System.Management" />
 		<Reference Include="System.ComponentModel.Composition" />
-		<Reference Include="System.ComponentModel.DataAnnotations" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="UIAutomationProvider" />
-		<Reference Include="System.Web" />
 	</ItemGroup>
 
 	<ItemGroup>
