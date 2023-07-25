@@ -12,6 +12,7 @@ using Win32API.Modules;
 using WindowsInput;
 using CoreLib.Diagnostics;
 using System.Linq;
+using CoreLib;
 
 namespace BaseLmPlugin
 {
@@ -227,25 +228,15 @@ namespace BaseLmPlugin
             #region CHILD EXIT
             if (e.NewState == ContextExecutionState.ProcessExited)
             {
+
                 //default process file name variable
                 string processFileName = null;
 
-                //obtain exited process id
-                if (e.StateObject is int exitedProcessId)
+                //try to onbtain file name from new process file info class (new client)
+                if (TryGetProcessInfo(e.StateObject, out var processInfo))
                 {
-                    //get the file name of exited process, old client method
-                    //if we cant obtain file name here then we dont need to process further
-                    if (!context.TryGetProcessFileName(exitedProcessId, out processFileName))
-                        return;                        
-                }
-                else
-                {
-                    //try to onbtain file name from new process file info class (new client)
-                    if (TryGetProcessInfo(e.StateObject, out var processInfo))
-                    {
-                        //assign found process file name to local variable
-                        processFileName = processInfo?.ProcessFileName;
-                    }
+                    //assign found process file name to local variable
+                    processFileName = processInfo?.ProcessFileName;
                 }
 
                 //check if we could obtain the proces file name
@@ -268,9 +259,12 @@ namespace BaseLmPlugin
                                 //reset wait handle
                                 TerminateHandle.Reset();
 
-                                //async begin wating
-                                Action<IExecutionContext> del = new(WaitForTerminateWorker);
-                                del.BeginInvoke(context, WaitForTerminateCallback, del);
+                                //start async waiting
+                                System.Threading.Tasks.Task.Run(() => WaitForTerminateWorker(context))
+                                    .ContinueWith(t =>
+                                    {
+                                        Trace.WriteLine($"{nameof(SteamLicenseManager)} exception in {nameof(WaitForTerminateWorker)}, exception message {t.Exception.Message}.");
+                                    }, System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
                             }
                         }
                     }
@@ -284,22 +278,11 @@ namespace BaseLmPlugin
                 //default process file name variable
                 string processFileName = null;
 
-                //obtain exited process id
-                if (e.StateObject is int exitedProcessId)
+                //try to onbtain file name from new process file info class (new client)
+                if (TryGetProcessInfo(e.StateObject, out var processInfo))
                 {
-                    //get the file name of exited process, old client method
-                    //if we cant obtain file name here then we dont need to process further
-                    if (!context.TryGetProcessFileName(exitedProcessId, out processFileName))
-                        return;
-                }
-                else
-                {
-                    //try to onbtain file name from new process file info class (new client)
-                    if (TryGetProcessInfo(e.StateObject, out var processInfo))
-                    {
-                        //assign found process file name to local variable
-                        processFileName = processInfo?.ProcessFileName;
-                    }
+                    //assign found process file name to local variable
+                    processFileName = processInfo?.ProcessFileName;
                 }
 
                 //check if valid file name was obtained
@@ -359,27 +342,6 @@ namespace BaseLmPlugin
             }
         }
 
-        private void WaitForTerminateCallback(IAsyncResult result)
-        {
-            try
-            {
-                //check if correct delegate is passed in the async state
-                if (result.AsyncState is Action<IExecutionContext> del)
-                {
-                    //end invoke
-                    del.EndInvoke(result);
-                }
-                else
-                {
-                    Trace.WriteLine($"{nameof(SteamLicenseManager)} invalid object passed in async state of {nameof(WaitForTerminateCallback)}.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"{nameof(SteamLicenseManager)} exception in {nameof(WaitForTerminateCallback)}, exception message {ex.Message}.");
-            }
-        }
-
         /// <summary>
         /// Tries to obtaine process info from state object.
         /// </summary>
@@ -406,9 +368,9 @@ namespace BaseLmPlugin
 
                 processInfo = new DynamicProcessInfo()
                 {
-                    IsMain = isMain ,
-                    ProcessFileName = processFileName ,
-                    ProcessId = processId ,
+                    IsMain = isMain,
+                    ProcessFileName = processFileName,
+                    ProcessId = processId,
                 };
 
                 return true;
@@ -581,9 +543,9 @@ namespace BaseLmPlugin
                 {
                     if (!string.IsNullOrWhiteSpace(childName))
                     {
-                        if (processName.ToLower() == childName.ToLower() ||
-                            processNameWithoutExtension.ToLower() == childName.ToLower() ||
-                            processNameWithExtension.ToLower() == childName.ToLower())
+                        if (string.Compare(processName, childName, StringComparison.OrdinalIgnoreCase) == 0 ||
+                            string.Compare(processNameWithoutExtension, childName, StringComparison.OrdinalIgnoreCase) == 0 ||
+                            string.Compare(processNameWithExtension, childName, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             return true;
                         }
@@ -626,9 +588,9 @@ namespace BaseLmPlugin
         public string ProcessFileName
         {
             get; set;
-        } 
-        
+        }
+
         #endregion
-    } 
+    }
     #endregion
 }

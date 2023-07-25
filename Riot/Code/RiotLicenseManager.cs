@@ -35,7 +35,7 @@ namespace BaseLmPlugin
         #endregion
 
         #region OVERRIDES
-        
+
         public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
         {
             var context = new DialogContext(DialogType.UserNamePassword, key, profile);
@@ -107,22 +107,14 @@ namespace BaseLmPlugin
                 //local process id variable
                 int? processId = null;
 
-                //try to obtain process id as int statge object (old client version)
-                if (e.StateObject is int @int)
+                //try to obtain process id with process info object (new client version)
+                if (TryGetProcessInfo(e.StateObject, out var processInfo))
                 {
-                    processId = @int;
-                }
-                else
-                {
-                    //try to obtain process id with process info object (new client version)
-                    if(TryGetProcessInfo(e.StateObject,out var processInfo))
-                    {
-                        processId = processInfo?.ProcessId;
-                    }
+                    processId = processInfo?.ProcessId;
                 }
 
                 //check if process id was obtained
-                if(processId.HasValue)
+                if (processId.HasValue)
                 {
                     try
                     {
@@ -168,7 +160,7 @@ namespace BaseLmPlugin
                     }
                 }
             }
-        }         
+        }
 
         #endregion
     }
@@ -177,7 +169,7 @@ namespace BaseLmPlugin
     public class RiotLogin
     {
         #region PUBLIC FUNCTIONS
-        
+
         public static async Task<bool> IPCLoginAsync(int processId, string username, string password, string region = "")
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -222,7 +214,7 @@ namespace BaseLmPlugin
 
                         //get current ipc auth token
                         var ipcTokenArgument = arguments.Where(argument => argument.StartsWith("--remoting-auth-token"))
-                            .FirstOrDefault();    
+                            .FirstOrDefault();
 
                         //parse arguments
                         ipcPort = int.Parse(portArgument.Split('=')[1]);
@@ -299,11 +291,11 @@ namespace BaseLmPlugin
                 return true;
             }
             catch
-            {    
+            {
                 //create custom exception here
                 return false;
             }
-        } 
+        }
 
         #endregion
 
@@ -457,10 +449,10 @@ namespace BaseLmPlugin
             [JsonProperty("method")]
             public string method { get; set; }
         }
-        #endregion 
-        
-        #endregion        
-    } 
+        #endregion
+
+        #endregion
+    }
     #endregion
 
     #region RIOTLICENSEMANAGERSETTINGS
