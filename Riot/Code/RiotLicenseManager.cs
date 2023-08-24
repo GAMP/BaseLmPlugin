@@ -1,4 +1,6 @@
 ﻿using Client;
+using CoreLib.Diagnostics;
+using GizmoShell;
 using IntegrationLib;
 using Newtonsoft.Json;
 using System;
@@ -11,10 +13,13 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Win32API.Com.Shell32;
 using Win32API.Headers;
 using Win32API.Modules;
+using WindowsInput;
 
 namespace BaseLmPlugin
 {
@@ -134,9 +139,11 @@ namespace BaseLmPlugin
                             if (username == null || password == null)
                                 return;
 
-                            var sucess = RiotLogin.IPCLoginAsync(process.Id, username, password)
-                                .GetAwaiter()
-                                .GetResult();
+                            //var sucess = RiotLogin.IPCLoginAsync(process.Id, username, password)
+                            //    .GetAwaiter()
+                            //    .GetResult();
+
+                            var sucess = RiotLogin.InputLogin(process.Id, username, password);
 
                             if (sucess)
                             {
@@ -284,6 +291,7 @@ namespace BaseLmPlugin
                     var credentialsJson = JsonConvert.SerializeObject(credential);
                     var credentialsContent = new StringContent(credentialsJson, Encoding.UTF8, "application/json");
                     var credentialsResponse = await httpClient.PutAsync(credentialsUrl, credentialsContent);
+                    var s = credentialsResponse.Content.ReadAsStringAsync();
                     credentialsResponse.EnsureSuccessStatusCode();
 
                     #endregion
@@ -295,6 +303,38 @@ namespace BaseLmPlugin
                 //create custom exception here
                 return false;
             }
+        }
+
+        public static bool InputLogin(int processId, string username, string password)
+        {
+            if (!CoreProcess.WaitForWindowCreated(processId, 15000))
+            {
+                return false;
+            }
+
+            var process = Process.GetProcessById(processId);
+            var windowHandle = process.MainWindowHandle;
+
+            WindowInfo windowInfo = new WindowInfo(windowHandle);
+            windowInfo.BringToFront();
+
+            windowInfo.Activate();
+            Thread.Sleep(1000);
+            KeyboardSimulator keyboard = new();
+            MouseSimulator mouse = new();
+            var x = windowInfo.Location.X + 900;
+            var y = windowInfo.Location.Y + 450;
+            System.Windows.Forms.Cursor.Position = new(x, y);
+            mouse.LeftButtonClick();
+
+            keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+            keyboard.TextEntry(username);
+            keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+            keyboard.TextEntry(password);
+            keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+
+            return true;
+
         }
 
         #endregion
