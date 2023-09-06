@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 namespace BaseLmPlugin
 {
     #region ORIGINLICENSEMANAGER
+    [Obsolete()]
     [Export(typeof(ILicenseManagerPlugin))]
     [PluginMetadata("EA Origin", "1.0.0.0", "Manages by launching origin process with user code token.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.origin.png")]
     public class OriginLicenseManager : SteamLicenseManager,

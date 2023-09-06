@@ -16,7 +16,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Win32API.Com.Shell32;
 using Win32API.Headers;
 using Win32API.Modules;
 using WindowsInput;
@@ -68,7 +67,7 @@ namespace BaseLmPlugin
         }
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
-        {
+        {          
             var key = license.KeyAs<RiotLicenseKey>();
 
             //set installed key
@@ -315,25 +314,44 @@ namespace BaseLmPlugin
             var process = Process.GetProcessById(processId);
             var windowHandle = process.MainWindowHandle;
 
-            WindowInfo windowInfo = new WindowInfo(windowHandle);
-            windowInfo.BringToFront();
+            try
+            {
+#if RELEASE
+                //block user input
+                User32.BlockInput(true);
+#endif
 
-            windowInfo.Activate();
-            Thread.Sleep(1000);
-            KeyboardSimulator keyboard = new();
-            MouseSimulator mouse = new();
-            var x = windowInfo.Location.X + 900;
-            var y = windowInfo.Location.Y + 450;
-            System.Windows.Forms.Cursor.Position = new(x, y);
-            mouse.LeftButtonClick();
+                WindowInfo windowInfo = new WindowInfo(windowHandle);                
 
-            keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-            keyboard.TextEntry(username);
-            keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-            keyboard.TextEntry(password);
-            keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+                windowInfo.Activate();
+                Thread.Sleep(5000);
+                KeyboardSimulator keyboard = new();
+                MouseSimulator mouse = new();
+                var x = windowInfo.Location.X + 900;
+                var y = windowInfo.Location.Y + 450;
 
-            return true;
+                System.Windows.Forms.Cursor.Position = new(x, y);
+                mouse.LeftButtonClick();
+
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.TextEntry(username);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.TextEntry(password);
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+
+                return true;
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+#if RELEASE
+                //block user input
+                User32.BlockInput(false);
+#endif
+            }
 
         }
 

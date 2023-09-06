@@ -14,6 +14,7 @@ using System.Windows;
 
 namespace BaseLmPlugin
 {
+    [Obsolete()]
     [Export(typeof(ILicenseManagerPlugin))]
     [PluginMetadata("Minecraft",
         "1.0.0.0",

@@ -6,6 +6,7 @@ using System.Windows;
 
 namespace BaseLmPlugin
 {
+    [Obsolete()]
     [Export(typeof(ILicenseManagerPlugin))]
     [PluginMetadata("Battle State (Experimental)", "1.0.0.0", "Manages license keys by obtaining login tokens and using them for auto login.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.battlestate.png")]
     public class BattleStateLicenseManager : SteamLicenseManager
