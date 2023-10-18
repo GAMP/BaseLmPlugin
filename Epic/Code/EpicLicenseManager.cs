@@ -5,8 +5,6 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Windows;
 
@@ -21,7 +19,6 @@ namespace BaseLmPlugin
         [ImportingConstructor()]
         public EpicLicenseManager()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += OnJSONAssemblyResolve;
         }
         #endregion
 
@@ -208,41 +205,7 @@ namespace BaseLmPlugin
             return false;
         }
 
-        #endregion
-
-        #region EVENT HANDLERS
-
-        private Assembly OnJSONAssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            //check if request is coming from current assembly
-            if (args.RequestingAssembly != args.RequestingAssembly)
-                return null;
-
-            //get requested assembly name
-            var REQUESTED_NAME = args.Name?.Split(',').FirstOrDefault();
-
-            //check if name supplied
-            if (string.IsNullOrWhiteSpace(REQUESTED_NAME))
-                return null;
-
-            //compare to desired assembly
-            if (string.Compare(REQUESTED_NAME, "Newtonsoft.Json", true) == 0)
-            {
-                //we no longer need to handle resolve event
-                AppDomain.CurrentDomain.AssemblyResolve -= OnJSONAssemblyResolve;
-
-                //try to obtain json assembly
-                return AppDomain.CurrentDomain
-                    .GetAssemblies()
-                    .Where(assembly => assembly.FullName.StartsWith(REQUESTED_NAME, StringComparison.CurrentCultureIgnoreCase))
-                    .FirstOrDefault();
-            }
-
-            //not desired assembly
-            return null;
-        }
-
-        #endregion        
+        #endregion    
     }
     #endregion
 

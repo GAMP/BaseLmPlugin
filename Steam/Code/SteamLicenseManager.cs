@@ -12,7 +12,6 @@ using Win32API.Modules;
 using WindowsInput;
 using CoreLib.Diagnostics;
 using System.Linq;
-using CoreLib;
 
 namespace BaseLmPlugin
 {

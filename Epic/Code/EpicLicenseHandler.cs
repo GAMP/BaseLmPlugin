@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Win32API.Com.Shell32;
 using Win32API.Modules;
 using WindowsInput;
 
@@ -41,6 +42,8 @@ namespace BaseLmPlugin
                 //check if process have started
                 if (createdProcess != null)
                     return new EpicInitResult(createdProcess);
+                else
+                    throw new Exception("Epic launcher process was not cereated.");
 
             }
             catch (Exception ex)
@@ -48,9 +51,6 @@ namespace BaseLmPlugin
                 //process starting failed, return error result here 
                 return new EpicInitResult(ex);
             }
-
-            //reuturn erro result
-            return new EpicInitResult();
         }
 
         public static Process StartEpicProcess(string fileName, string arguments, string workingDirectory, string username, string password, IExecutionContext cx)
@@ -69,7 +69,7 @@ namespace BaseLmPlugin
 
             int SMALL_DELAY = 1000;
             int MEDIUM_DELAY = 5000;
-            int LARGE_DELAY = 15000;
+            int LARGE_DELAY = 10000;
 
             //create a start info for the new process
             var startInfo = new ProcessStartInfo()
@@ -85,25 +85,9 @@ namespace BaseLmPlugin
             //start it within context and add it to the context process list
             //if we fail here we need to report the error back to the calling code by returning null
             if (!cx.AddProcessIfStarted(launcherProcess, true))
-                return null;
-
-            //wait for process to exit, launcher exits once its spawned new child processes
-            launcherProcess.WaitForExit(LARGE_DELAY);
-
-            //get first epic process
-            var targetProcess = Process.GetProcessesByName(EPIC_PROCESS_NAME)
-                .FirstOrDefault();
-
-            //no process found
-            if (targetProcess == null)
-                return null;
-
-            //wait for the process window to be created
-            if (CoreProcess.WaitForWindowCreated(targetProcess.Id, LARGE_DELAY) == false)
-                return null;
-
-            //get the main window instance
-            WindowInfo window = new(targetProcess.MainWindowHandle);
+            {
+                //even if we failed to create a new process proceed with the login initiation
+            }            
 
             try
             {
@@ -111,6 +95,43 @@ namespace BaseLmPlugin
                 //block user input
                 User32.BlockInput(true);               
 #endif
+
+                //wait for child processes to be created
+                Thread.Sleep(LARGE_DELAY);
+
+                //get first epic process
+                Process targetProcess = Process.GetProcessesByName(EPIC_PROCESS_NAME)
+                    .Where(p => !p.HasExited)
+                    .FirstOrDefault();
+
+                IntPtr windowHandle = IntPtr.Zero;
+
+                //no process found
+                if (targetProcess != null)
+                {
+                    //wait for the process window to be created
+                    if (CoreProcess.WaitForWindowCreated(targetProcess.Id, LARGE_DELAY))
+                        windowHandle = targetProcess.MainWindowHandle;                  
+                }
+
+                //if we failed to obtain window process try to find it in system
+                if (windowHandle == IntPtr.Zero)
+                {
+                    for (int i = 0; i < 30; i++)
+                    {
+                        windowHandle = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "UnrealWindow", "Epic Games Launcher");
+                        if (windowHandle != IntPtr.Zero)
+                            break;
+                        
+                        Thread.Sleep(SMALL_DELAY);
+                    }                 
+                }
+
+                if (windowHandle == IntPtr.Zero)
+                    throw new ArgumentException("Epic launcher window not found");               
+
+                //get the main window instance
+                WindowInfo window = new(windowHandle);
 
                 //check if window is minimized and restore it
                 if (window.IsMinimized)
@@ -120,10 +141,10 @@ namespace BaseLmPlugin
                 window.BringToFront();
 
                 //the color of the first pixel in the EPIC internal window
-                var fieldColor = Color.FromArgb(255, 32, 32, 32);
+                var fieldColor = Color.FromArgb(255, 16, 74, 130);
 
                 //wait for the target pixel to be created
-                var pixel = WaitForPixel(window.Handle, fieldColor, null, null, 50, 250);
+                var pixel = WaitForPixel(window.Handle, fieldColor, null, null, 20, 1000);
 
                 //check if pixel is found
                 if (pixel == null)
@@ -132,39 +153,42 @@ namespace BaseLmPlugin
                 }
 
                 //create simulators
-                KeyboardSimulator keyboard = new KeyboardSimulator();
-                MouseSimulator mouse = new MouseSimulator();
+                KeyboardSimulator keyboard = new();
+                MouseSimulator mouse = new();
 
                 //bring main window to front
                 window.BringToFront();
 
-                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + 100, window.Location.Y + 100);
+                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width /2), window.Location.Y + (window.Height /2));
 
                 Thread.Sleep(SMALL_DELAY);
                 mouse.LeftButtonClick();
                 Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-                Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
-
-                //login screen
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB); 
 
                 //add medium delay to allow the screen switch
-                Thread.Sleep(MEDIUM_DELAY);
+                
+                Thread.Sleep(SMALL_DELAY);
 
                 //user name
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                 keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.TextEntry(username);
 
-                //password
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-                keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
-                keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
-                keyboard.TextEntry(password);
+                //the login button some times takes more time to respons so a delay is required
+                Thread.Sleep(SMALL_DELAY);
 
-                //Color[A = 255, R = 0, G = 116, B = 228]
+                //send enter key to initiate login
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
+
+                //password
+                Thread.Sleep(MEDIUM_DELAY);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                Thread.Sleep(SMALL_DELAY);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.TextEntry(password);
 
                 //the color of the first pixel in the EPIC login button
                 var loginButtonColor = Color.FromArgb(255, 0, 116, 228);
@@ -186,6 +210,8 @@ namespace BaseLmPlugin
 
                 //keep the keyboard locked for little more time so the password copying would not be possible
                 Thread.Sleep(MEDIUM_DELAY);
+
+                return targetProcess;
             }
             catch
             {
@@ -197,9 +223,7 @@ namespace BaseLmPlugin
                 //unlock user input
                 User32.BlockInput(false);
 #endif
-            }
-
-            return targetProcess;
+            }      
         }
 
         private static Pixel WaitForPixel(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250)
