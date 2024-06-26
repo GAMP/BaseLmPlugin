@@ -57,18 +57,17 @@ namespace BaseLmPlugin
         {
             try
             {
-                //kill all exisitng epic processes
+                //kill all existing epic processes
                 Process.GetProcessesByName(EPIC_PROCESS_NAME)
                     .ToList()
                     .ForEach(proc => proc.Kill());
             }
             catch (Exception)
             {
-                //we failed but thats ok
+                //we failed but that is ok
             }
 
             int SMALL_DELAY = 1000;
-            int MEDIUM_DELAY = 5000;
             int LARGE_DELAY = 10000;
 
             //create a start info for the new process
@@ -87,7 +86,7 @@ namespace BaseLmPlugin
             if (!cx.AddProcessIfStarted(launcherProcess, true))
             {
                 //even if we failed to create a new process proceed with the login initiation
-            }            
+            }
 
             try
             {
@@ -111,7 +110,7 @@ namespace BaseLmPlugin
                 {
                     //wait for the process window to be created
                     if (CoreProcess.WaitForWindowCreated(targetProcess.Id, LARGE_DELAY))
-                        windowHandle = targetProcess.MainWindowHandle;                  
+                        windowHandle = targetProcess.MainWindowHandle;
                 }
 
                 //if we failed to obtain window process try to find it in system
@@ -122,13 +121,13 @@ namespace BaseLmPlugin
                         windowHandle = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "UnrealWindow", "Epic Games Launcher");
                         if (windowHandle != IntPtr.Zero)
                             break;
-                        
+
                         Thread.Sleep(SMALL_DELAY);
-                    }                 
+                    }
                 }
 
                 if (windowHandle == IntPtr.Zero)
-                    throw new ArgumentException("Epic launcher window not found");               
+                    throw new ArgumentException("Epic launcher window not found");
 
                 //get the main window instance
                 WindowInfo window = new(windowHandle);
@@ -140,11 +139,12 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                //the color of the first pixel in the EPIC internal window
-                var fieldColor = Color.FromArgb(255, 16, 74, 130);
+                //potential login button pixel colors
+                var loginDisabledButtonColor = Color.FromArgb(255, 16, 74, 129);
+                var loginEnabledButtonColor = Color.FromArgb(255, 0, 116, 228);
 
                 //wait for the target pixel to be created
-                var pixel = WaitForPixel(window.Handle, fieldColor, null, null, 20, 1000);
+                var pixel = WaitForPixel(window.Handle, [loginDisabledButtonColor, loginEnabledButtonColor], null, null, 10, 1000);
 
                 //check if pixel is found
                 if (pixel == null)
@@ -159,57 +159,23 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width /2), window.Location.Y + (window.Height /2));
-
-                Thread.Sleep(SMALL_DELAY);
+                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width / 2), window.Location.Y + (window.Height / 2));
                 mouse.LeftButtonClick();
-                Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB); 
-
-                //add medium delay to allow the screen switch
-                
-                Thread.Sleep(SMALL_DELAY);
 
                 //user name
-
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                 keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
-                Thread.Sleep(SMALL_DELAY);
                 keyboard.TextEntry(username);
 
-                //the login button some times takes more time to respons so a delay is required
-                Thread.Sleep(SMALL_DELAY);
-
-                //send enter key to initiate login
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
-
                 //password
-                Thread.Sleep(MEDIUM_DELAY);
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
-                Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
+                keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
                 keyboard.TextEntry(password);
 
-                //the color of the first pixel in the EPIC login button
-                var loginButtonColor = Color.FromArgb(255, 0, 116, 228);
-
-                //wait for the target pixel to be created
-                pixel = WaitForPixel(window.Handle, loginButtonColor, null, null, 50, 250);
-
-                //check if pixel is found
-                if (pixel == null)
-                {
-                    //pixel is not found, since some quite big delay already passed we can just press login button
-                }
-
-                //the login button some times takes more time to respons so a delay is required
-                Thread.Sleep(SMALL_DELAY);
-
                 //send enter key to initiate login
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
-
-                //keep the keyboard locked for little more time so the password copying would not be possible
-                Thread.Sleep(MEDIUM_DELAY);
 
                 return targetProcess;
             }
@@ -223,7 +189,7 @@ namespace BaseLmPlugin
                 //unlock user input
                 User32.BlockInput(false);
 #endif
-            }      
+            }
         }
 
         private static Pixel WaitForPixel(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250)
@@ -252,6 +218,39 @@ namespace BaseLmPlugin
                         return foundPixel;
 
                     Thread.Sleep(delay);
+                }
+            }
+
+            return null;
+        }
+
+        private static Pixel WaitForPixel(IntPtr windowHandle, Color[] color, int? x = default, int? y = null, int retries = 100, int delay = 250)
+        {
+            if (windowHandle == IntPtr.Zero)
+                throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
+
+            for (int i = 1; i <= retries; i++)
+            {
+                using (var screenImage = Imaging.CaptureWindowImage(windowHandle))
+                {
+                    using (ImageTraverser traverser = new ImageTraverser(screenImage))
+                    {
+                        var query = traverser
+                            .Where(e => color.Contains(e.Color));
+
+                        if (x.HasValue)
+                            query = query.Where(pixel => pixel.Location.X == x);
+
+                        if (y.HasValue)
+                            query = query.Where(pixel => pixel.Location.Y == y);
+
+                        var foundPixel = query.FirstOrDefault();
+
+                        if (foundPixel != null)
+                            return foundPixel;
+
+                        Thread.Sleep(delay);
+                    }
                 }
             }
 
