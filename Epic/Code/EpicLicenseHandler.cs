@@ -43,7 +43,7 @@ namespace BaseLmPlugin
                 if (createdProcess != null)
                     return new EpicInitResult(createdProcess);
                 else
-                    throw new Exception("Epic launcher process was not cereated.");
+                    throw new Exception("Epic launcher process was not created.");
 
             }
             catch (Exception ex)

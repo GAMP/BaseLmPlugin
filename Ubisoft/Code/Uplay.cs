@@ -70,7 +70,7 @@ namespace BaseLmPlugin
                 //get uplay clean process name
                 string processName = Path.GetFileNameWithoutExtension(executablePath);
 
-                //kill all exisitng uplay processes
+                //kill all existing uplay processes
                 Process.GetProcessesByName(processName)
                    .Where(x => string.Compare(x.MainModule.FileName, executablePath, true) == 0)
                    .ToList()
@@ -83,11 +83,14 @@ namespace BaseLmPlugin
                        }
                        catch (Exception)
                        {
-                           //we failed but thats ok
+                           //we failed but that's ok
                        }
                    });
 
-                //initalize uplay process start info
+                //clear credentials
+                ClearLoginData();
+
+                //initialize uplay process start info
                 ProcessStartInfo startInfo = new()
                 {
                     FileName = executablePath,
@@ -110,9 +113,24 @@ namespace BaseLmPlugin
                     //mark process created
                     forceCreation = true;
 
-                    int windowWaitTimeout = 12000;
-                    if (!CoreProcess.WaitForWindowCreated(uplayProcess, windowWaitTimeout, true))
-                        ExceptionHelper.ThrowVisibleWindowTimedOut(nameof(UplayLicenseManager), windowWaitTimeout);
+                    int processWindowCreateTimeout = 15000;
+                    if (!CoreProcess.WaitForWindowCreated(uplayProcess, processWindowCreateTimeout, true))
+                        ExceptionHelper.ThrowVisibleWindowTimedOut(nameof(UplayLicenseManager), processWindowCreateTimeout);
+
+                    IntPtr targetWindowHandle = IntPtr.Zero;
+
+                    for (int i = 0; i < 15; i++)
+                    {
+                        targetWindowHandle = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "Chrome_WidgetWin_0", "Ubisoft Connect");
+                        if (targetWindowHandle != IntPtr.Zero)
+                            break;
+
+                        Thread.Sleep(1000);
+                    }
+
+                    //window was not found
+                    if (targetWindowHandle == IntPtr.Zero)
+                        return;
 
                     try
                     {
@@ -120,52 +138,72 @@ namespace BaseLmPlugin
                         //disable input
                         User32.BlockInput(true);
 #endif
-
+ 
                         //get window
-                        WindowInfo info = new(uplayProcess.MainWindowHandle);
+                        WindowInfo info = new(targetWindowHandle);
 
                         //activate origin window
                         info.BringToFront();
                         info.Activate();
 
-                        //the color of the first pixel in the Uplay login button
-                        var fieldColor = Color.FromArgb(255, 0, 119, 238);
+                        //this will allow us to determine if the splash screen is shown
+                        for (int i = 0; i < 10; i++) 
+                        {
+                            try
+                            {
+                                var mainWindow = new WindowInfo(uplayProcess.MainWindowHandle);
+                                if(mainWindow.IsVisible)
+                                {
+                                    Thread.Sleep(1000);
+                                }
+                            }
+                            catch
+                            {
+                                break;
+                            }
+                        }
 
-                        //wait for the target pixel to be created
-                        var pixel = WaitForPixelAsync(info.Handle, fieldColor, null, null, 50, 100)
-                            .GetAwaiter()
-                            .GetResult();
-                        //ExceptionHelper.ThrowWindowPixelTimedOutIfPixelNull(pixel,nameof(UplayLicenseManager),)
+                     
+                        Thread.Sleep(3000);
+                        User32.SetWindowPos(info.Handle, Win32API.Headers.WinUser.Enumerations.HWND.HWND_TOPMOST, 0, 0, 1214, 689, Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOREPOSITION | Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOMOVE);
+
+                        var startLocation = new System.Drawing.Point(335, 105);
+               
+                        var loginPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 180);
+                        var passwordPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 280);
+                        var loginButtonPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 460);
 
                         //create input simulator
-                        WindowsInput.KeyboardSimulator sim = new();
+                        WindowsInput.KeyboardSimulator keyboard = new();
+                        WindowsInput.MouseSimulator mouse = new();
 
-                        //send tab
-                        sim.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.LCONTROL, WindowsInput.Native.VirtualKeyCode.TAB);
+                        System.Windows.Forms.Cursor.Position = loginPoint;
+                        mouse.LeftButtonClick();
+                        Thread.Sleep(1000);
 
                         //clear username filed
-                        sim.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.LCONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
-
+                        keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.LCONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                         //send back to clear any possible typed value
-                        sim.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
-
+                        keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
                         //set username
-                        sim.TextEntry(license.KeyAs<UserNamePasswordLicenseKeyBase>().Username);
+                        keyboard.TextEntry(license.KeyAs<UserNamePasswordLicenseKeyBase>().Username);
+                        Thread.Sleep(1000);
 
-                        //swicth field
-                        sim.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                        System.Windows.Forms.Cursor.Position = passwordPoint;
+                        mouse.LeftButtonClick();
+                        Thread.Sleep(1000);
 
                         //clear password filed
-                        sim.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.LCONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
-
+                        keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.LCONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                         //send back to clear any possible typed value
-                        sim.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
-
+                        keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.BACK);
                         //set password
-                        sim.TextEntry(license.KeyAs<UserNamePasswordLicenseKeyBase>().Password);
+                        keyboard.TextEntry(license.KeyAs<UserNamePasswordLicenseKeyBase>().Password);
+                        Thread.Sleep(1000);
 
-                        //proceed with login
-                        sim.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
+                        System.Windows.Forms.Cursor.Position = loginButtonPoint;
+                        mouse.LeftButtonClick();
+                        Thread.Sleep(1000);
 
                         //set environment variable
                         Environment.SetEnvironmentVariable("LICENSEKEYUSER", license.KeyAs<UplayLicenseKey>().Username);
@@ -231,57 +269,19 @@ namespace BaseLmPlugin
             return modulePath;
         }
 
-        private static async Task<Pixel> WaitForPixelAsync(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250, CancellationToken ct = default)
+        private void ClearLoginData()
         {
-            if (windowHandle == IntPtr.Zero)
-                throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
-
-            for (int i = 1; i <= retries; i++)
+            try
             {
-                //get the main window instance
-                WindowInfo info = new(windowHandle);
-
-                if (info.IsMinimized)
-                    info.Restore();
-
-                info.BringToFront();
-
-                //create window rect
-                Rectangle rect = new(info.Location.X, info.Location.Y, info.Width, info.Height);
-
-                //create bitmap image based on window size
-                var screenImage = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                //copy image from screen
-                using (Graphics g = Graphics.FromImage(screenImage))
-                {
-                    g.CopyFromScreen(rect.Left, rect.Top, 0, 0, info.Size, CopyPixelOperation.SourceCopy);
-                }
-
-
-                using (ImageTraverser traverser = new(screenImage))
-                {
-                    var query = traverser
-                        .Where(e => e.Color == color);
-
-                    if (x.HasValue)
-                        query = query.Where(pixel => pixel.Location.X == x);
-
-                    if (y.HasValue)
-                        query = query.Where(pixel => pixel.Location.Y == y);
-
-                    var foundPixel = query.FirstOrDefault();
-
-                    if (foundPixel != null)
-                        return foundPixel;
-                }
-
-                await Task.Delay(delay, ct).ConfigureAwait(false);
+                var credentialsFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ubisoft Game Launcher", "ConnectSecureStorage.dat");
+                if(File.Exists(credentialsFileName))
+                    File.Delete(credentialsFileName);
             }
-
-            return null;
+            catch
+            {
+                //ignore
+            }
         }
-
 
         #endregion
     }
