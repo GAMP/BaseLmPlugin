@@ -165,9 +165,9 @@ namespace BaseLmPlugin
 
                      
                         Thread.Sleep(3000);
-                        User32.SetWindowPos(info.Handle, Win32API.Headers.WinUser.Enumerations.HWND.HWND_TOPMOST, 0, 0, 1214, 689, Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOREPOSITION | Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOMOVE);
+                        User32.SetWindowPos(info.Handle, Win32API.Headers.WinUser.Enumerations.HWND.HWND_TOPMOST, 0, 0, 1280, 778, Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOREPOSITION | Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOMOVE);
 
-                        var startLocation = new System.Drawing.Point(335, 105);
+                        var startLocation = new System.Drawing.Point(335, 110);
                
                         var loginPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 180);
                         var passwordPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 280);

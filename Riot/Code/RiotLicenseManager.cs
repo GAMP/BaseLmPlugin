@@ -370,8 +370,8 @@ namespace BaseLmPlugin
                             KeyboardSimulator keyboard = new();
                             MouseSimulator mouse = new();
 
-                            var x = windowInfo.Location.X + 64;
-                            var y = windowInfo.Location.Y + 64;
+                            var x = windowInfo.Location.X + 72;
+                            var y = windowInfo.Location.Y + 282;
 
                             System.Windows.Forms.Cursor.Position = new(x, y);
 
@@ -380,9 +380,17 @@ namespace BaseLmPlugin
 
                             Thread.Sleep(1000);
 
-                            keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                            keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
+                            keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
+
                             keyboard.TextEntry(username);
                             keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+
+                            Thread.Sleep(1000);
+
+                            keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
+                            keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
+
                             keyboard.TextEntry(password);
                             keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
 
