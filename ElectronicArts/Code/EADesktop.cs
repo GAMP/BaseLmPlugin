@@ -273,7 +273,7 @@ namespace BaseLmPlugin
                 window.BringToFront();
 
                 var location = window.Location;
-                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 400);
+                NativeMethods.SetCursorPos(location.X + DEFAULT_X, location.Y + 440);
                 Thread.Sleep(SMALL_DELAY);
                 mouse.LeftButtonDoubleClick();
                 Thread.Sleep(SMALL_DELAY);
@@ -281,8 +281,11 @@ namespace BaseLmPlugin
                 Thread.Sleep(SMALL_DELAY);
                 keyboard.TextEntry(username);
                 Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
+
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.TextEntry(password);
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
             }
             catch
