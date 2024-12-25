@@ -96,7 +96,7 @@ namespace BaseLmPlugin
 #endif
 
                 //wait for child processes to be created
-                Thread.Sleep(LARGE_DELAY);
+                Thread.Sleep(5000);
 
                 //get first epic process
                 Process targetProcess = Process.GetProcessesByName(EPIC_PROCESS_NAME)
@@ -139,12 +139,11 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                //potential login button pixel colors
-                var loginDisabledButtonColor = Color.FromArgb(255, 16, 74, 129);
-                var loginEnabledButtonColor = Color.FromArgb(255, 0, 116, 228);
+                //potential forgot password button pixel color
+                var loginDisabledButtonColor = Color.FromArgb(255,38, 187, 255);
 
                 //wait for the target pixel to be created
-                var pixel = WaitForPixel(window.Handle, [loginDisabledButtonColor, loginEnabledButtonColor], null, null, 10, 1000);
+                var pixel = WaitForPixel(window.Handle, [loginDisabledButtonColor], null, null, 10, 1000);
 
                 //check if pixel is found
                 if (pixel == null)
@@ -159,10 +158,12 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width / 2), window.Location.Y + (window.Height / 2));
+                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width / 2), window.Location.Y + 64);
                 mouse.LeftButtonClick();
+         
 
                 //user name
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                 keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
@@ -170,6 +171,7 @@ namespace BaseLmPlugin
 
                 //password
                 keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                 keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
                 keyboard.TextEntry(password);

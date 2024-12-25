@@ -169,9 +169,9 @@ namespace BaseLmPlugin
 
                         var startLocation = new System.Drawing.Point(335, 110);
                
-                        var loginPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 180);
-                        var passwordPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 280);
-                        var loginButtonPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 460);
+                        var loginPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 160);
+                        var passwordPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 260);
+                        var loginButtonPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 440);
 
                         //create input simulator
                         WindowsInput.KeyboardSimulator keyboard = new();
