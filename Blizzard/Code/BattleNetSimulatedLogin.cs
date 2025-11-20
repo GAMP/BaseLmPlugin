@@ -69,11 +69,11 @@ namespace BaseLmPlugin
             info.BringToFront();
             info.Activate();
 
-            //the color of the first pixel in the Battlenet login buton
-            fieldColor = Color.FromArgb(255, 24, 74, 102);
+            //the color of the first pixel in the Battlenet logo
+            fieldColor = Color.FromArgb(255, 57, 143, 255);
 
             //wait for the target pixel to be created
-            pixel = WaitForPixelAsync(info.Handle, fieldColor, 30, 343, 60, 100)
+            pixel = WaitForPixelAsync(info.Handle, fieldColor, 73, 69, 60, 100)
                 .GetAwaiter()
                 .GetResult();
    
@@ -88,29 +88,11 @@ namespace BaseLmPlugin
             KeyboardSimulator sim = new();
             MouseSimulator msim = new();
 
-            var x = info.Location.X + 180;
-            var y = info.Location.Y + 225;
+            var x = info.Location.X + 40;
+            var y = info.Location.Y + 265;
             System.Windows.Forms.Cursor.Position = new Point(x, y);
 
             msim.LeftButtonClick();
-
-            #region REMEMBER ME
-
-            //add small delay after click
-            Thread.Sleep(250);
-
-            fieldColor = Color.FromArgb(255, 16, 41, 67);
-
-            //wait for the target pixel to be created
-            pixel = GetPixelAtLocation(mainWindowHandle, 32, 307);
-
-            if (pixel != null && pixel.Color == fieldColor)
-            {
-                System.Windows.Forms.Cursor.Position = new Point(info.Location.X + 32, info.Location.Y + 307);
-                msim.LeftButtonClick();
-            } 
-
-            #endregion
 
             //clear username filed
             sim.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.LCONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
@@ -130,15 +112,31 @@ namespace BaseLmPlugin
             //add small delay after click
             Thread.Sleep(250);
 
-            //press tab so we can cycle away from the username input
-            sim.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+            ////press tab so we can cycle away from the username input
+            //sim.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
 
             //reactivate
             info.BringToFront();
             info.Activate();
 
-            x = info.Location.X + info.Width - 150;
-            y = info.Location.Y + 270;
+
+            //the color of the first pixel in the Battlenet login buton
+            fieldColor = Color.FromArgb(255, 42, 117, 227);
+
+            //wait for the target pixel to be created
+            pixel = WaitForPixelAsync(info.Handle, fieldColor, null, null, 60, 100)
+                .GetAwaiter()
+                .GetResult();
+
+            //check if pixel is found
+            if (pixel == null)
+            {
+                //since some times the pixel cant be detected we can wait for fixed time and then proceed with input normally
+                Thread.Sleep(3000);
+            }
+
+            x = info.Location.X + pixel.Location.X + 5;
+            y = info.Location.Y + pixel.Location.Y + 5;
             System.Windows.Forms.Cursor.Position = new Point(x, y);
 
             msim.LeftButtonClick();

@@ -121,7 +121,7 @@ namespace BaseLmPlugin
 
                     for (int i = 0; i < 15; i++)
                     {
-                        targetWindowHandle = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "Chrome_WidgetWin_0", "Ubisoft Connect");
+                        targetWindowHandle = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "Chrome_WidgetWin_1", "Ubisoft Connect");
                         if (targetWindowHandle != IntPtr.Zero)
                             break;
 

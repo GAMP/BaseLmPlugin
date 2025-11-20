@@ -141,6 +141,7 @@ namespace BaseLmPlugin
 
                 //potential forgot password button pixel color
                 var loginDisabledButtonColor = Color.FromArgb(255,38, 187, 255);
+                var loginButtonColor = Color.FromArgb(255, 68, 68, 72);
 
                 //wait for the target pixel to be created
                 var pixel = WaitForPixel(window.Handle, [loginDisabledButtonColor], null, null, 10, 1000);
@@ -160,24 +161,47 @@ namespace BaseLmPlugin
 
                 System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width / 2), window.Location.Y + 64);
                 mouse.LeftButtonClick();
-         
+                
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);           
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
 
                 //user name
-                Thread.Sleep(SMALL_DELAY);
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                Thread.Sleep(SMALL_DELAY);           
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
-                keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
                 keyboard.TextEntry(username);
 
-                //password
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.TAB);
+                //send enter key to switch to next state (password field)
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
                 Thread.Sleep(SMALL_DELAY);
+
+                //wait for the target pixel to be created
+                var loginPixel = WaitForPixel(window.Handle, [loginButtonColor], null, null, 10, 1000);
+
+                //check if pixel is found
+                
+                if (loginPixel == null)
+                {
+                    //even if we did not find the correct pixel proceed anyway
+                }
+
+                Thread.Sleep(5000);
+
+                //focus on the password field
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+
+                //password
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
-                keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.BACK);
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
                 keyboard.TextEntry(password);
 
+                //add a delay to ensure the UI is ready
+                Thread.Sleep(SMALL_DELAY);
+
                 //send enter key to initiate login
-                keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.RETURN);
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
 
                 return targetProcess;
             }

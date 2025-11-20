@@ -101,6 +101,21 @@ namespace BaseLmPlugin
                     });
                 }
 
+                string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+                string appDataFolder = Path.Combine(localAppDataPath, "Battle.net");
+
+                try
+                {
+                    if (Directory.Exists(appDataFolder))
+                    {
+                        Directory.Delete(appDataFolder,true);
+                    }
+                }
+                catch (Exception)
+                {
+                    context.WriteMessage("Error deleting battlenet app data folder.");
+                }
+
                 //create process start info
                 ProcessStartInfo startInfo = new()
                 {
