@@ -4,7 +4,6 @@
 		<LangVersion>latest</LangVersion>
 		<Product>BaseLmPlugin</Product>
 		<Description>Basic license management functionality plugin.</Description>
-		<Copyright>Copyright NET Projects © 2022</Copyright>
 		<Company>NET Projects</Company>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<UseWindowsForms>true</UseWindowsForms>
@@ -12,9 +11,10 @@
 		<NoWarn>1591;1570;1573;0612</NoWarn>
 		<Optimize>true</Optimize>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<Configurations>Debug;Release</Configurations>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Version>3.0.0.0</Version>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -23,10 +23,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\CoreLib\CoreLib\CoreLib.csproj" />
-		<ProjectReference Include="..\..\..\DataInterfaces\DataInterfaces\DataInterfaces.csproj" />
-		<ProjectReference Include="..\..\..\Gizmo.Shared\Gizmo.Shared.csproj" />
-		<ProjectReference Include="..\..\..\Gizmo.Shell\Gizmo.Shell\Gizmo.Shell.csproj" />
+		<ProjectReference Include="..\CoreLib\CoreLib\CoreLib.csproj" />
+		<ProjectReference Include="..\DataInterfaces\DataInterfaces\DataInterfaces.csproj" />
+		<ProjectReference Include="..\Gizmo.Shared\Gizmo.Shared.csproj" />
+		<ProjectReference Include="..\Gizmo.Shell\Gizmo.Shell\Gizmo.Shell.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -36,7 +36,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	</ItemGroup>
 
 	<ItemGroup>
