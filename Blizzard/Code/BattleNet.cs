@@ -6,8 +6,6 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
 using Win32API.Modules;
 
 namespace BaseLmPlugin
@@ -32,18 +30,6 @@ namespace BaseLmPlugin
         };
 
         #endregion
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, key, profile);
-            return context.Display(owner) ? context.Key : null;
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, new BattleNetLicenseKey(), profile);
-            return context.Display(owner) ? context.Key : null;
-        }
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
@@ -190,19 +176,6 @@ namespace BaseLmPlugin
 
         public override void Uninstall(IApplicationLicense license)
         {
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override UserControl GetConfigurationUI()
-        {
-            return new SteamSettingsView();
         }
 
         public override IPluginSettings GetSettingsInstance()

@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Threading;
-using System.Windows;
 
 namespace BaseLmPlugin
 {
@@ -27,32 +26,6 @@ namespace BaseLmPlugin
         #endregion
 
         #region OVERRIDES
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, new EpicLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
@@ -174,13 +147,6 @@ namespace BaseLmPlugin
                 if (!NativeMethods.WritePrivateProfileString("RememberMe", "Data", null, EpicLicenseHandler.USER_SETTINGS_FILE_PATH))
                     throw new Win32Exception();
             }
-        }
-
-        public override System.Windows.Controls.UserControl GetConfigurationUI()
-        {
-            //return new instance of steam settings view control
-            //since the settings are same with steam same view can be reused
-            return new SteamSettingsView();
         }
 
         public override IPluginSettings GetSettingsInstance()

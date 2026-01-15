@@ -17,32 +17,6 @@ namespace BaseLmPlugin
     {
         #region OVERRIDES
 
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.Executable, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.Executable, new ProcessLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         public override void Install(IApplicationLicense license, Client.IExecutionContext context, ref bool forceCreation)
         {
             if (context.HasCompleted | context.AutoLaunch)
@@ -91,14 +65,6 @@ namespace BaseLmPlugin
                     //throw exception
                     ExceptionHelper.ThrowStartFailureException(nameof(CommandLineLicenseManager), executablePath);
                 }
-            }
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
             }
         }
 

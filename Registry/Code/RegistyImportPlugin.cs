@@ -28,47 +28,5 @@ namespace BaseLmPlugin
             //import into registry
             regFile.Import();
         }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, System.Windows.Window owner)
-        {
-            var context = new DialogContext(DialogType.RegistryImport, new RegistryLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, System.Windows.Window owner)
-        {
-            var context = new DialogContext(DialogType.RegistryImport, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override bool CanAdd
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
-            }
-        }
     }
 }

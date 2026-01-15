@@ -15,7 +15,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using Win32API.Headers;
 using Win32API.Modules;
 using WindowsInput;
@@ -41,32 +40,6 @@ namespace BaseLmPlugin
         #endregion
 
         #region OVERRIDES
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, new RiotLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {

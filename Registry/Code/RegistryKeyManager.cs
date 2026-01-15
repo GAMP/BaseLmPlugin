@@ -17,32 +17,6 @@ namespace BaseLmPlugin
     {
         #region OVERRIDES
 
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.Registry, new RegistryLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.Registry, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         public override void Install(IApplicationLicense license, Client.IExecutionContext context, ref bool forceCreation)
         {
             #region INITIALIZE VARIABLES
@@ -171,22 +145,9 @@ namespace BaseLmPlugin
 
         #region ICONFIGURABLE
 
-        public override UserControl GetConfigurationUI()
-        {
-            return new RegistrySettingsView();
-        }
-
         public override IPluginSettings GetSettingsInstance()
         {
             return new RegistryLicenseManagerSettings();
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
-            }
         }
 
         #endregion

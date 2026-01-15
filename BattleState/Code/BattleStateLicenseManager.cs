@@ -2,7 +2,6 @@
 using IntegrationLib;
 using System;
 using System.ComponentModel.Composition;
-using System.Windows;
 
 namespace BaseLmPlugin
 {
@@ -12,32 +11,6 @@ namespace BaseLmPlugin
     public class BattleStateLicenseManager : SteamLicenseManager
     {
         #region OVERRIDES
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, new BattleStateLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {

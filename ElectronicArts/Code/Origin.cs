@@ -27,32 +27,6 @@ namespace BaseLmPlugin
     {
         #region INTERFACE
 
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, new OriginLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
             if (context.HasCompleted | context.AutoLaunch)
@@ -195,19 +169,6 @@ namespace BaseLmPlugin
                 }
                 #endregion
             }
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override System.Windows.Controls.UserControl GetConfigurationUI()
-        {
-            return new SteamSettingsView();
         }
 
         public override IPluginSettings GetSettingsInstance()

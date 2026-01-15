@@ -39,34 +39,6 @@ namespace BaseLmPlugin
 
         #region OVERRIDES
 
-        public override bool CanAdd
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, key, profile);
-            return context.Display(owner) ? context.Key : null;
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.UserNamePassword, new MineCraftLicenseKey(), profile);
-            return context.Display(owner) ? context.Key : null;
-        }
-
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
             if (context.HasCompleted | context.AutoLaunch)

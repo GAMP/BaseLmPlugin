@@ -22,32 +22,6 @@ namespace BaseLmPlugin
     {
         #region OVERRIDES
 
-        public override IApplicationLicenseKey EditLicense(IApplicationLicenseKey key, ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.Process, key, profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public override IApplicationLicenseKey GetLicense(ILicenseProfile profile, ref bool additionHandled, Window owner)
-        {
-            var context = new DialogContext(DialogType.Process, new ProcessLicenseKey(), profile);
-            if (context.Display(owner))
-            {
-                return context.Key;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         public override void Install(IApplicationLicense license, Client.IExecutionContext context, ref bool forceCreation)
         {
             var settings = this.SettingsAs<ProcessLicenseManagerSettings>();
@@ -62,19 +36,6 @@ namespace BaseLmPlugin
         public override IPluginSettings GetSettingsInstance()
         {
             return new ProcessLicenseManagerSettings();
-        }
-
-        public override UserControl GetConfigurationUI()
-        {
-            return new ProcessLicenseManagerView();
-        }
-
-        public override bool CanEdit
-        {
-            get
-            {
-                return true;
-            }
         }
 
         #endregion
