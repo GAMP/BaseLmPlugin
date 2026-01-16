@@ -141,7 +141,7 @@ namespace BaseLmPlugin
                 #region START EA DESKTOP
 
                 //attach state event handler
-                context.ExecutionStateChaged += OnExecutionStateChanged;
+                context.ExecutionStateChanged += OnExecutionStateChanged;
 
                 //add the process to tracked process if successfully started
                 if (context.AddProcessIfStarted(eaDesktopProcess, true))
@@ -156,7 +156,7 @@ namespace BaseLmPlugin
                 else
                 {
                     //detach state event handler if we failed to start the process
-                    context.ExecutionStateChaged -= OnExecutionStateChanged;
+                    context.ExecutionStateChanged -= OnExecutionStateChanged;
 
                     //throw exception
                     ExceptionHelper.ThrowStartFailureException(nameof(EADesktopLicenseManager), executablePath);

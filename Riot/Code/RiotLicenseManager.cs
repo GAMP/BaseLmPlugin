@@ -29,10 +29,10 @@ namespace BaseLmPlugin
             _executionContext = context;
 
             //detach handlers
-            context.ExecutionStateChaged -= OnExecutionStateChanged;
+            context.ExecutionStateChanged -= OnExecutionStateChanged;
 
             //attach handlers
-            context.ExecutionStateChaged += OnExecutionStateChanged;
+            context.ExecutionStateChanged += OnExecutionStateChanged;
         }
 
         public override void Uninstall(IApplicationLicense license)

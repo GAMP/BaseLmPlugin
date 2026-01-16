@@ -119,7 +119,7 @@ namespace BaseLmPlugin
                 streamProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
 
                 //attach state event handler
-                context.ExecutionStateChaged += OnExecutionStateChanged;
+                context.ExecutionStateChanged += OnExecutionStateChanged;
 
                 //try to start steam process and add it to context in case of successful start
                 if (context.AddProcessIfStarted(streamProcess, true))
@@ -138,7 +138,7 @@ namespace BaseLmPlugin
                 else
                 {
                     //detach state event handler if we failed to start the process
-                    context.ExecutionStateChaged -= OnExecutionStateChanged;
+                    context.ExecutionStateChanged -= OnExecutionStateChanged;
 
                     //throw start failure exception
                     ExceptionHelper.ThrowStartFailureException(nameof(SteamLicenseManager), executablePath);
@@ -252,7 +252,7 @@ namespace BaseLmPlugin
 
             //when context is no longer usable detach the state handler
             else if (e.NewState == ContextExecutionState.Finalized || e.NewState == ContextExecutionState.Destroyed || e.NewState == ContextExecutionState.Released)
-                context.ExecutionStateChaged -= OnExecutionStateChanged;
+                context.ExecutionStateChanged -= OnExecutionStateChanged;
         }
 
         public virtual bool DivertExecution(IExecutionContext context)

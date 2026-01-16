@@ -78,7 +78,7 @@ namespace BaseLmPlugin
                     //attach local handlers
                     //they are used within installation routine so we can act on desired events
                     //and cancel installation if required
-                    context.ExecutionStateChaged += contextStateEventHandler;
+                    context.ExecutionStateChanged += contextStateEventHandler;
                     context.Client.LoginStateChange += userStateEventHandler;
 
                     var result = EpicLicenseHandler.Initiate(epicInitParameters, context);
@@ -116,15 +116,15 @@ namespace BaseLmPlugin
                 finally
                 {
                     //remove state change handlers
-                    context.ExecutionStateChaged -= contextStateEventHandler;
+                    context.ExecutionStateChanged -= contextStateEventHandler;
                     context.Client.LoginStateChange -= userStateEventHandler;
                 }
 
                 //detach handlers
-                context.ExecutionStateChaged -= OnExecutionStateChanged;
+                context.ExecutionStateChanged -= OnExecutionStateChanged;
 
                 //attach handlers
-                context.ExecutionStateChaged += OnExecutionStateChanged;
+                context.ExecutionStateChanged += OnExecutionStateChanged;
             }
         }
 
