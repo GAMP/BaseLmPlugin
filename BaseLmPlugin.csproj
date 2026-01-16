@@ -84,4 +84,24 @@
 	  </EmbeddedResource>
 	</ItemGroup>
 
+	<Target Name="CleanPublishOutput" AfterTargets="Publish">
+		<ItemGroup>
+			<Files Include="$(PublishDir)*.pdb" />
+			<Files Include="$(PublishDir)*.exe" />
+			<Files Include="$(PublishDir)*.dll" />
+			<Files Include="$(PublishDir)*.json" />
+			<Files Include="$(PublishDir)*.xml" />
+			<FilesToDelete Include="@(Files)" Condition="%(Filename) != 'BaseLmPlugin'" />
+			<DirsToClean Include="$([System.IO.Directory]::GetDirectories('$(PublishDir)'))" />
+		</ItemGroup>
+
+		<!--remove leftorver pdb files-->
+		<Delete Files="$(PublishDir)Gizmo.Client.UI.pdb;$(PublishDir)BaseLmPlugin.pdb" />
+		<Delete Files="$(PublishDir)Gizmo.Client.UI.pdb;$(PublishDir)BaseLmPlugin.xml" />
+		<!--delete files-->
+		<Delete Files="@(FilesToDelete)" />
+		<!--delete directories-->
+		<RemoveDir Directories="@(DirsToClean)" />
+	</Target>
+
 </Project>
