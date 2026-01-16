@@ -144,7 +144,7 @@ namespace BaseLmPlugin
                 #region START ORIGIN
 
                 //attach state event handler
-                context.ExecutionStateChaged += OnExecutionStateChaged;
+                context.ExecutionStateChaged += OnExecutionStateChanged;
 
                 //add the process to tracked process if successfully started
                 if (context.AddProcessIfStarted(originProcess, true))
@@ -162,7 +162,7 @@ namespace BaseLmPlugin
                 else
                 {
                     //detach state event handler if we failed to start the process
-                    context.ExecutionStateChaged -= OnExecutionStateChaged;
+                    context.ExecutionStateChaged -= OnExecutionStateChanged;
 
                     //throw exception
                     ExceptionHelper.ThrowStartFailureException(nameof(OriginLicenseManager), executablePath);

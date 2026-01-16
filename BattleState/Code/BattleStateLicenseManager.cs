@@ -14,36 +14,7 @@ namespace BaseLmPlugin
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
-            var key = license.KeyAs<BattleStateLicenseKey>();
-            if (key == null)
-                throw new ArgumentException("Invalid battle station key specified.", nameof(key));
-
-            string username = key.Username;
-            string password = key.Password;
-
-            //validate parameters here
-
-            try
-            {
-                BattleStateLogin.LoginAsync(username, password)
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-            catch (BattleStateLoginException ex)
-            {
-                throw new Exception(ex.Message);
-            }
-            catch
-            {
-                throw;
-            }
-
-            //detach handlers
-            context.ExecutionStateChaged -= OnExecutionStateChaged;
-
-            //atach handlers
-            context.ExecutionStateChaged += OnExecutionStateChaged;
+            throw new NotImplementedException();
         }
 
         public override void Uninstall(IApplicationLicense license)

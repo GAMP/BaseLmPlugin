@@ -129,10 +129,10 @@ namespace BaseLmPlugin
                 }
 
                 //detach handlers
-                context.ExecutionStateChaged -= OnExecutionStateChaged;
+                context.ExecutionStateChaged -= OnExecutionStateChanged;
 
                 //atach handlers
-                context.ExecutionStateChaged += OnExecutionStateChaged;
+                context.ExecutionStateChaged += OnExecutionStateChanged;
             }
         }
 

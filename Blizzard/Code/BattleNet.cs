@@ -113,7 +113,7 @@ namespace BaseLmPlugin
                 Process targetProcess = new() { StartInfo = startInfo };
 
                 //attach state event handler
-                context.ExecutionStateChaged += OnExecutionStateChaged;
+                context.ExecutionStateChaged += OnExecutionStateChanged;
 
                 //try to start process and add it to execution context
                 if (context.AddProcessIfStarted(targetProcess, true))
@@ -166,7 +166,7 @@ namespace BaseLmPlugin
                 else
                 {
                     //detach state event handler if we failed to start the process
-                    context.ExecutionStateChaged -= OnExecutionStateChaged;
+                    context.ExecutionStateChaged -= OnExecutionStateChanged;
 
                     //throw exception
                     ExceptionHelper.ThrowStartFailureException(nameof(BattleNetLicenseManager), executablePath);

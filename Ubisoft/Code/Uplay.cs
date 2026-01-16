@@ -80,7 +80,7 @@ namespace BaseLmPlugin
                 };
 
                 //attach state event handler
-                context.ExecutionStateChaged += OnExecutionStateChaged;
+                context.ExecutionStateChaged += OnExecutionStateChanged;
 
                 if (context.AddProcessIfStarted(uplayProcess, true))
                 {
@@ -197,7 +197,7 @@ namespace BaseLmPlugin
                 else
                 {
                     //detach state event handler if we failed to start the process
-                    context.ExecutionStateChaged -= OnExecutionStateChaged;
+                    context.ExecutionStateChaged -= OnExecutionStateChanged;
 
                     //throw start failure exception
                     ExceptionHelper.ThrowStartFailureException(nameof(UplayLicenseManager), executablePath);
