@@ -20,15 +20,15 @@ namespace BaseLmPlugin
     [LicenseManagerPlugin(ConfigurationType = typeof(BattleNetLicenseManager), KeyType = typeof(BattleNetLicenseKey))]
     public class BattleNetLicenseManager : SteamLicenseManager
     {
-        private readonly string[] processImageFileNames = new string[]
-        {
+        private readonly string[] processImageFileNames =
+        [
             @"Battle.net Launcher",
             @"Battle.net",
             @"BlizzardError",
             @"Agent",
             @"Battle.net Helper",
             @"SystemSurvey"
-        };
+        ];
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
@@ -131,7 +131,7 @@ namespace BaseLmPlugin
                     }
                     else
                     {
-                        //chceck if target process has main window and use it instead of child process main window
+                        //check if target process has main window and use it instead of child process main window
                         if (targetProcess.MainWindowHandle != IntPtr.Zero)
                             childProcessId = targetProcess.Id;
                     }
@@ -144,7 +144,7 @@ namespace BaseLmPlugin
                     {
                         #if RELEASE
                         //block user input
-                        User32.BlockInput(true);
+                        Win32API.Modules.User32.BlockInput(true);
                         #endif
 
                         //simulate login
@@ -158,7 +158,7 @@ namespace BaseLmPlugin
                     {
 #if RELEASE
                         //unblock user input
-                        User32.BlockInput(false); 
+                        Win32API.Modules.User32.BlockInput(false); 
 #endif
                     }
                 }

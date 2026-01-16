@@ -47,9 +47,9 @@ namespace BaseLmPlugin
                         {
 #if RELEASE
                             //block user input
-                            User32.BlockInput(true);
+                            Win32API.Modules.User32.BlockInput(true);
 #endif
-                            WindowInfo windowInfo = new WindowInfo(windowHandle);
+                            WindowInfo windowInfo = new(windowHandle);
 
                             windowInfo.Activate();
                             Thread.Sleep(5000);
@@ -90,7 +90,7 @@ namespace BaseLmPlugin
                         {
 #if RELEASE
                             //block user input
-                            User32.BlockInput(false);
+                            Win32API.Modules.User32.BlockInput(false);
 #endif
                         }
 
@@ -110,7 +110,7 @@ namespace BaseLmPlugin
         }
 
         private readonly static object _lock = new();
-        private static string[] riotClientWindowNames = ["Riot Client Main", "Riot Client"];
+        private static readonly string[] riotClientWindowNames = ["Riot Client Main", "Riot Client"];
 
         private static bool WaitForWindowCreated(IEnumerable<string> windowTitles, int timeOut, out IEnumerable<Process> foundProcesses, bool throwOnErrors = false)
         {
@@ -122,10 +122,10 @@ namespace BaseLmPlugin
             //create time span
             TimeSpan waitSpan = TimeSpan.FromMilliseconds(timeOut);
 
-            foundProcesses = new List<Process>();
+            foundProcesses = [];
 
             #region Wait
-            //wait untill span expires
+            //wait until span expires
             while (waitSpan.TotalMilliseconds > 0)
             {
                 try
@@ -134,7 +134,7 @@ namespace BaseLmPlugin
                     foundProcesses = Process.GetProcesses().Where(process => windowTitles.Any(windowTitle => string.Compare(process.MainWindowTitle, windowTitle, StringComparison.OrdinalIgnoreCase) == 0));
 
                     //check if process with specified title exists
-                    if (foundProcesses.Count() > 0)
+                    if (foundProcesses.Any())
                         return true;
 
                     //sleep for wait period
@@ -166,7 +166,7 @@ namespace BaseLmPlugin
             string.Compare(executableName, "RiotClient.exe", StringComparison.OrdinalIgnoreCase) == 0;
         }
 
-        private static string[] riotProcessNames = new[] { "RiotClientServices", "RiotClientUxRender", "RiotClientUx", "RiotClient" };
+        private static readonly string[] riotProcessNames = ["RiotClientServices", "RiotClientUxRender", "RiotClientUx", "RiotClient"];
 
         public static void TerminateRiotProcesses()
         {
