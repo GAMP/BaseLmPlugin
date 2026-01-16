@@ -1,22 +1,22 @@
-﻿using System;
-using System.ComponentModel.Composition;
+﻿using Gizmo.Shared.Plugins;
 using IntegrationLib;
-using System.Windows;
+using System;
+using System.ComponentModel.Composition;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace BaseLmPlugin
 {
-    #region CommandLineLicenseManager
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.CommandLine)]
     [PluginMetadata(
         "Command Line",
         "1.0.0.0",
         "Manages license by launching application executable with license key and executable command line parameters.",
         "BaseLmPlugin;BaseLmPlugin.Resources.Icons.cmd.png")]
+    [LicenseManagerPlugin(KeyType = typeof(CommandLineLicenseKey))]
     public class CommandLineLicenseManager : LicenseManagerBase
     {
-        #region OVERRIDES
-
         public override void Install(IApplicationLicense license, Client.IExecutionContext context, ref bool forceCreation)
         {
             if (context.HasCompleted | context.AutoLaunch)
@@ -37,7 +37,7 @@ namespace BaseLmPlugin
                 if (!File.Exists(executablePath))
                     ExceptionHelper.ThrowExecutableNotFoundException(nameof(CommandLineLicenseManager), executablePath);
 
-                //get executable aruments
+                //get executable arguments
                 string executableArgument = process.StartInfo.Arguments;
 
                 //get expanded key arguments            
@@ -55,7 +55,7 @@ namespace BaseLmPlugin
                 }
 
                 //start process and add to context if it was started
-                if (context.AddProcessIfStarted(process,true))
+                if (context.AddProcessIfStarted(process, true))
                 {
                     //executables process creation should not be forced
                     forceCreation = false;
@@ -67,8 +67,5 @@ namespace BaseLmPlugin
                 }
             }
         }
-
-        #endregion
-    } 
-    #endregion
+    }
 }

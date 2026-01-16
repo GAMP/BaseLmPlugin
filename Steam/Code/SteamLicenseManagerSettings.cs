@@ -1,0 +1,83 @@
+﻿using IntegrationLib;
+using SharedLib;
+using System;
+using System.IO;
+
+namespace BaseLmPlugin
+{
+    [Serializable]
+    public class SteamLicenseManagerSettings : PropertyChangedNotificator, IPluginSettings
+    {
+        private bool terminate = true;
+        private string childIgnoreList = string.Empty;
+        private int childWaitTimeout = 5;
+
+        /// <summary>
+        /// Gets or sets if context should be terminated once a child exists.
+        /// </summary>
+        public bool TerminateOnChildExit
+        {
+            get { return terminate; }
+            set
+            {
+                terminate = value;
+                RaisePropertyChanged("TerminateOnChildExit");
+            }
+        }
+
+        /// <summary>
+        /// List of processes separated by that should trigger context termination once exited.
+        /// <remarks>Full name or process name can be specified. Process names should be separated by ; mark.</remarks>
+        /// </summary>
+        public string ChildIgnoreList
+        {
+            get { return childIgnoreList; }
+            set
+            {
+                childIgnoreList = value;
+                RaisePropertyChanged("ChildIgnoreList");
+            }
+        }
+
+        /// <summary>
+        /// Amount of time to wait before terminating context.
+        /// </summary>
+        public int ChildWaitTimeout
+        {
+            get { return childWaitTimeout; }
+            set
+            {
+                childWaitTimeout = value;
+                RaisePropertyChanged("ChildWaitTimeout");
+            }
+        }
+
+        /// <summary>
+        /// Matches file name with current ignored child processes names.
+        /// </summary>
+        /// <param name="fileName">Process file name, this can be process full file name, process name with or without extension.</param>
+        /// <returns>True if specified <paramref name="fileName"/>matches one of ignored child processes names.</returns>
+        public bool IsMatch(string fileName)
+        {
+            if (!string.IsNullOrWhiteSpace(ChildIgnoreList))
+            {
+                string processName = Path.GetFileName(fileName);
+                string processNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                string processNameWithExtension = Path.GetFileNameWithoutExtension(fileName) + ".exe";
+                foreach (string childName in ChildIgnoreList.Split(';'))
+                {
+                    if (!string.IsNullOrWhiteSpace(childName))
+                    {
+                        if (string.Compare(processName, childName, StringComparison.OrdinalIgnoreCase) == 0 ||
+                            string.Compare(processNameWithoutExtension, childName, StringComparison.OrdinalIgnoreCase) == 0 ||
+                            string.Compare(processNameWithExtension, childName, StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+}

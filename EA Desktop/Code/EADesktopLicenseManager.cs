@@ -1,27 +1,27 @@
-﻿using System;
-using System.Linq;
-using IntegrationLib;
-using System.ComponentModel.Composition;
-using System.IO;
-using Client;
-using System.Windows;
-using System.Diagnostics;
+﻿using Client;
 using CoreLib.Diagnostics;
+using Gizmo.Shared.Plugins;
+using IntegrationLib;
+using System;
+using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Win32API.Modules;
 using WindowsInput;
 
 namespace BaseLmPlugin
 {
-    #region EADesktopLicenseManager
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.EADesktop)]
     [PluginMetadata("EA Desktop", "1.0.0.0", "Manages by launching ea desktop process with auth token.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.eadesktop.png")]
+    [LicenseManagerPlugin(ConfigurationType = typeof(EADesktopLicenseManager), KeyType = typeof(EADesktopLicenseKey))]
     public class EADesktopLicenseManager : SteamLicenseManager,
         IExecutionDivertPlugin
     {
         readonly string[] processKillList = new[] { "EALauncher", "EALaunchHelper", "EADesktop" };
-
-        #region INTERFACE
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
@@ -110,7 +110,7 @@ namespace BaseLmPlugin
                 catch (Exception ex)
                 {
                     context.WriteMessage($"Failed deleting EA Desktop cookie file. {ex.Message}");
-                } 
+                }
                 #endregion
 
                 #region INITIALIZE PROCESS
@@ -147,8 +147,8 @@ namespace BaseLmPlugin
                 if (context.AddProcessIfStarted(eaDesktopProcess, true))
                 {
                     //send input to the process window
-                        SendProcessInput(USERNAME, PASSWORD);
-             
+                    SendProcessInput(USERNAME, PASSWORD);
+
 
                     //executables process creation should not be forced
                     forceCreation = false;
@@ -170,10 +170,6 @@ namespace BaseLmPlugin
             return new EADesktopManagerSettings();
         }
 
-        #endregion
-
-        #region FUNCTIONS
- 
         private static void SendProcessInput(string username, string password)
         {
             int LARGE_DELAY = 5000;
@@ -263,17 +259,5 @@ namespace BaseLmPlugin
 
             }
         }
-
-        #endregion
     }
-    #endregion
-
-
-
-    #region EADesktopManagerSettings
-    [Serializable]
-    public class EADesktopManagerSettings : SteamLicenseManagerSettings, IPluginSettings
-    {
-    }
-    #endregion
 }

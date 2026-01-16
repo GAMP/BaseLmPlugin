@@ -1,31 +1,23 @@
 ﻿using Client;
 using Gizmo.Client;
+using Gizmo.Shared.Plugins;
 using IntegrationLib;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace BaseLmPlugin
 {
-    #region EPICLICENSEMANAGER
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.Epic)]
     [PluginMetadata("Epic", "1.0.0.0", "Manages by launching epic launcher process with remember me user code token saved.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.epic.png")]
+    [LicenseManagerPlugin(ConfigurationType = typeof(EpicLicenseManagerSettings), KeyType = typeof(EpicLicenseKey))]
     public class EpicLicenseManager : SteamLicenseManager
     {
-        #region CONSTRUCTOR
-        [ImportingConstructor()]
-        public EpicLicenseManager()
-        {
-        }
-        #endregion
-
-        #region FIELDS
-        private bool DIVERT_EXECUTION = false;
-        #endregion
-
-        #region OVERRIDES
+        private bool _divertExecution = false;
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
@@ -49,7 +41,7 @@ namespace BaseLmPlugin
                 };
 
                 //by default reset diver execution flag
-                DIVERT_EXECUTION = false;
+                _divertExecution = false;
 
                 //create cancellation token source
                 var cancellationTokenSource = new CancellationTokenSource();
@@ -97,7 +89,7 @@ namespace BaseLmPlugin
                         if (createdProcess != null)
                         {
                             //since process is created we need to divert the execution
-                            DIVERT_EXECUTION = true;
+                            _divertExecution = true;
                         }
                     }
                     else if (result.InitResult == EpicInitResultCode.Canceled)
@@ -131,7 +123,7 @@ namespace BaseLmPlugin
                 //detach handlers
                 context.ExecutionStateChaged -= OnExecutionStateChanged;
 
-                //atach handlers
+                //attach handlers
                 context.ExecutionStateChaged += OnExecutionStateChanged;
             }
         }
@@ -158,10 +150,10 @@ namespace BaseLmPlugin
         public override bool DivertExecution(IExecutionContext context)
         {
             //if divert execution was set then we will diver once
-            if (DIVERT_EXECUTION)
+            if (_divertExecution)
             {
                 //reset the flag after first diversion
-                DIVERT_EXECUTION = false;
+                _divertExecution = false;
 
                 //divert execution
                 return true;
@@ -169,16 +161,6 @@ namespace BaseLmPlugin
 
             //no diversion should happen
             return false;
-        }
-
-        #endregion    
-    }
-    #endregion
-
-    #region EPICLICENSEMANAGERSETTINGS
-    [Serializable]
-    public class EpicLicenseManagerSettings : SteamLicenseManagerSettings, IPluginSettings
-    {
-    }
-    #endregion
+        }  
+    } 
 }

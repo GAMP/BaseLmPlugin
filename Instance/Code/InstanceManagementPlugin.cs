@@ -1,18 +1,19 @@
-﻿using IntegrationLib;
+﻿using Gizmo.Shared.Plugins;
+using IntegrationLib;
 using System.ComponentModel.Composition;
-using System.Windows;
+using System.Runtime.InteropServices;
 
 namespace BaseLmPlugin
 {
-    #region InstanceManagementPlugin
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.Instance)]
     [PluginMetadata(
         "Instance",
         "1.0.0.0",
-        "Manages license by limiting application istances.",
+        "Manages license by limiting application instances.",
         "BaseLmPlugin;BaseLmPlugin.Resources.Icons.instance.png")]
+    [LicenseManagerPlugin(KeyType = typeof(InstanceKey))]
     public class InstanceManagementPlugin : LicenseManagerBase
     {  
     } 
-    #endregion
 }

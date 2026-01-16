@@ -1,17 +1,19 @@
 ﻿using Client;
+using Gizmo.Shared.Plugins;
 using IntegrationLib;
 using System;
 using System.ComponentModel.Composition;
+using System.Runtime.InteropServices;
 
 namespace BaseLmPlugin
 {
     [Obsolete()]
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.BattleState)]
     [PluginMetadata("Battle State (Experimental)", "1.0.0.0", "Manages license keys by obtaining login tokens and using them for auto login.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.battlestate.png")]
+    [LicenseManagerPlugin(ConfigurationType = typeof(BattleStateLicenseManagerSettings), KeyType = typeof(BattleStateLicenseKey))]
     public class BattleStateLicenseManager : SteamLicenseManager
     {
-        #region OVERRIDES
-
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
             throw new NotImplementedException();
@@ -19,7 +21,7 @@ namespace BaseLmPlugin
 
         public override void Uninstall(IApplicationLicense license)
         {
-            //do nothing
+            throw new NotImplementedException();
         }
 
         public override bool DivertExecution(IExecutionContext context)
@@ -33,14 +35,5 @@ namespace BaseLmPlugin
             //return new instance of epic settings class
             return new BattleStateLicenseManagerSettings();
         }
-
-        #endregion
     }
-
-    #region BATTLESTATELICENSEMANAGERSETTINGS
-    [Serializable]
-    public class BattleStateLicenseManagerSettings : SteamLicenseManagerSettings, IPluginSettings
-    {
-    }
-    #endregion
 }

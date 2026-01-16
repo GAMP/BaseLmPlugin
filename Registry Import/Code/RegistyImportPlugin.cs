@@ -1,11 +1,15 @@
-﻿using IntegrationLib;
+﻿using Gizmo.Shared.Plugins;
+using IntegrationLib;
 using System;
 using System.ComponentModel.Composition;
+using System.Runtime.InteropServices;
 
 namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.RegistryImport)]
     [PluginMetadata("Registry Import","1.0.0.0","Manages license keys by importing registry file in system registry.","BaseLmPlugin;BaseLmPlugin.Resources.Icons.registry.png")]
+    [LicenseManagerPlugin(KeyType = typeof(RegistryLicenseKey))]
     public class RegistyImportPlugin : LicenseManagerBase
     {
         public override void Install(IApplicationLicense license, Client.IExecutionContext context, ref bool processCreated)

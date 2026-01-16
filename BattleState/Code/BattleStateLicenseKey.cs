@@ -3,8 +3,9 @@
 namespace BaseLmPlugin
 {
     /// <summary>
-    /// Battle state licence key.
+    /// Battle state license key.
     /// </summary>
+    [Obsolete()]
     [Serializable()]
     public class BattleStateLicenseKey : UserNamePasswordLicenseKeyBase
     {

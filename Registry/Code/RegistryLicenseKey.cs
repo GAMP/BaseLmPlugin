@@ -9,9 +9,7 @@ namespace BaseLmPlugin
     /// </summary>
     [Serializable()]
     public class RegistryLicenseKey : ApplicationLicenseKeyBase
-    {
-        #region OVERRIDES
-        
+    {        
         public override bool IsValid
         {
             get
@@ -27,7 +25,5 @@ namespace BaseLmPlugin
                 return string.IsNullOrWhiteSpace(Value) ? null : Value.Split(Environment.NewLine.ToCharArray()).FirstOrDefault();
             }
         } 
-
-        #endregion
     }
 }

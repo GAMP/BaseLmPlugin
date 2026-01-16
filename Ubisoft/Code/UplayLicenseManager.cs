@@ -1,32 +1,29 @@
-﻿using System;
-using System.Linq;
-using System.ComponentModel.Composition;
+﻿using Client;
+using CoreLib.Diagnostics;
+using Gizmo.Shared.Plugins;
+using GizmoShell;
 using IntegrationLib;
 using Microsoft.Win32;
-using System.IO;
-using Client;
-using System.Windows;
-using GizmoShell;
-using CoreLib.Diagnostics;
+using System;
+using System.ComponentModel.Composition;
 using System.Diagnostics;
-using Win32API.Modules;
-using System.Drawing;
-using CoreLib.Imaging;
-using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
+using Win32API.Modules;
 
 namespace BaseLmPlugin
 {
-    #region UplayLicenseManager
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.Uplay)]
     [PluginMetadata("UBI Uplay",
         "1.0.0.0",
         "Manages license keys by sending credentials input to application window.",
         "BaseLmPlugin;BaseLmPlugin.Resources.Icons.uplay.png")]
+    [LicenseManagerPlugin(ConfigurationType = typeof(UplayLicenseManagerSettings), KeyType = typeof(UplayLicenseKey))]
     public class UplayLicenseManager : SteamLicenseManager
     {
-        #region Interface
-
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
             if (context.HasCompleted | context.AutoLaunch)
@@ -112,7 +109,7 @@ namespace BaseLmPlugin
                         //disable input
                         User32.BlockInput(true);
 #endif
- 
+
                         //get window
                         WindowInfo info = new(targetWindowHandle);
 
@@ -121,12 +118,12 @@ namespace BaseLmPlugin
                         info.Activate();
 
                         //this will allow us to determine if the splash screen is shown
-                        for (int i = 0; i < 10; i++) 
+                        for (int i = 0; i < 10; i++)
                         {
                             try
                             {
                                 var mainWindow = new WindowInfo(uplayProcess.MainWindowHandle);
-                                if(mainWindow.IsVisible)
+                                if (mainWindow.IsVisible)
                                 {
                                     Thread.Sleep(1000);
                                 }
@@ -137,12 +134,12 @@ namespace BaseLmPlugin
                             }
                         }
 
-                     
+
                         Thread.Sleep(3000);
                         User32.SetWindowPos(info.Handle, Win32API.Headers.WinUser.Enumerations.HWND.HWND_TOPMOST, 0, 0, 1280, 778, Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOREPOSITION | Win32API.Headers.WinUser.Enumerations.SWP.SWP_NOMOVE);
 
                         var startLocation = new System.Drawing.Point(335, 110);
-               
+
                         var loginPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 160);
                         var passwordPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 260);
                         var loginButtonPoint = new System.Drawing.Point(info.Location.X + startLocation.X + 250, info.Location.Y + startLocation.Y + 440);
@@ -215,10 +212,6 @@ namespace BaseLmPlugin
             return false;
         }
 
-        #endregion
-
-        #region Private
-
         private string GetUplayPath()
         {
             string modulePath = string.Empty;
@@ -235,7 +228,7 @@ namespace BaseLmPlugin
             try
             {
                 var credentialsFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ubisoft Game Launcher", "ConnectSecureStorage.dat");
-                if(File.Exists(credentialsFileName))
+                if (File.Exists(credentialsFileName))
                     File.Delete(credentialsFileName);
             }
             catch
@@ -243,15 +236,5 @@ namespace BaseLmPlugin
                 //ignore
             }
         }
-
-        #endregion
     }
-    #endregion
-
-    #region UplayLicenseManagerSettings
-    [Serializable]
-    public class UplayLicenseManagerSettings : SteamLicenseManagerSettings, IPluginSettings
-    {
-    }
-    #endregion
 }

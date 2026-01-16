@@ -3,7 +3,7 @@
 namespace BaseLmPlugin
 {
     /// <summary>
-    /// Origin license key.
+    /// EA Desktop license key.
     /// </summary>
     [Serializable()]
     public class EADesktopLicenseKey : UserNamePasswordLicenseKeyBase

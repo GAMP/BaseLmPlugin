@@ -1,24 +1,25 @@
 ﻿using Client;
 using CoreLib.Diagnostics;
+using Gizmo.Shared.Plugins;
 using IntegrationLib;
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Win32API.Modules;
+using System.Runtime.InteropServices;
 
 namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
+    [Guid(Identifiers.Battlenet)]
     [PluginMetadata("Battle.NET",
         "1.0.0.0",
         "Manages license keys by sending credentials input to application window.",
         "BaseLmPlugin;BaseLmPlugin.Resources.Icons.battlenet.png")]
+    [LicenseManagerPlugin(ConfigurationType = typeof(BattleNetLicenseManager), KeyType = typeof(BattleNetLicenseKey))]
     public class BattleNetLicenseManager : SteamLicenseManager
     {
-        #region FIELDS
-
         private readonly string[] processImageFileNames = new string[]
         {
             @"Battle.net Launcher",
@@ -28,8 +29,6 @@ namespace BaseLmPlugin
             @"Battle.net Helper",
             @"SystemSurvey"
         };
-
-        #endregion
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {
@@ -183,11 +182,4 @@ namespace BaseLmPlugin
             return new BattleNetManagerSettings();
         }
     }
-
-    #region BattleNetManagerSettings
-    [Serializable]
-    public class BattleNetManagerSettings : SteamLicenseManagerSettings, IPluginSettings
-    {
-    }
-    #endregion
 }
