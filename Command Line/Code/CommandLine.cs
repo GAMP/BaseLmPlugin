@@ -13,7 +13,7 @@ namespace BaseLmPlugin
         "Command Line",
         "1.0.0.0",
         "Manages license by launching application executable with license key and executable command line parameters.",
-        "BaseLmPlugin;BaseLmPlugin.Resources.Icons.cmd.png")]
+        "BaseLmPlugin.Resources.Icons.cmd.png")]
     [LicenseManagerPlugin(KeyType = typeof(CommandLineLicenseKey))]
     public class CommandLineLicenseManager : LicenseManagerBase
     {

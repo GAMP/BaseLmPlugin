@@ -13,7 +13,7 @@ namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
     [Guid(Identifiers.Epic)]
-    [PluginMetadata("Epic", "1.0.0.0", "Manages by launching epic launcher process with remember me user code token saved.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.epic.png")]
+    [PluginMetadata("Epic", "1.0.0.0", "Manages by launching epic launcher process with remember me user code token saved.", "BaseLmPlugin.Resources.Icons.epic.png")]
     [LicenseManagerPlugin(ConfigurationType = typeof(EpicLicenseManagerSettings), KeyType = typeof(EpicLicenseKey))]
     public class EpicLicenseManager : SteamLicenseManager
     {

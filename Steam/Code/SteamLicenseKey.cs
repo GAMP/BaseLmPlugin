@@ -1,5 +1,6 @@
 ﻿using IntegrationLib;
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace BaseLmPlugin
 {
@@ -18,6 +19,7 @@ namespace BaseLmPlugin
         /// <summary>
         /// Gets or sets licenses username.
         /// </summary>
+        [Name("Username")]
         public string Username
         {
             get { return this.username; }
@@ -31,6 +33,7 @@ namespace BaseLmPlugin
         /// <summary>
         /// Gets or sets license password.
         /// </summary>
+        [Name("Password")]
         public string Password
         {
             get { return password; }
@@ -44,6 +47,7 @@ namespace BaseLmPlugin
         /// <summary>
         /// Gets or sets account id.
         /// </summary>
+        [Name("Account Id")]
         public string AccountId
         {
             get { return accountId; }

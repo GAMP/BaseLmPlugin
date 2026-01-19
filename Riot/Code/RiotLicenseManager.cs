@@ -10,7 +10,7 @@ namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
     [Guid(Identifiers.Riot)]
-    [PluginMetadata("Riot", "1.0.0.0", "Manages by passing credentials to Riot UX process.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.riot.png")]
+    [PluginMetadata("Riot", "1.0.0.0", "Manages by passing credentials to Riot UX process.", "BaseLmPlugin.Resources.Icons.riot.png")]
     [LicenseManagerPlugin(ConfigurationType = typeof(RiotLicenseManagerSettings), KeyType = typeof(RiotLicenseKey))]
     public class RiotLicenseManager : SteamLicenseManager
     {

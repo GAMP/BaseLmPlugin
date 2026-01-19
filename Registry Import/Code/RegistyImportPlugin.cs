@@ -8,7 +8,7 @@ namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
     [Guid(Identifiers.RegistryImport)]
-    [PluginMetadata("Registry Import","1.0.0.0","Manages license keys by importing registry file in system registry.","BaseLmPlugin;BaseLmPlugin.Resources.Icons.registry.png")]
+    [PluginMetadata("Registry Import","1.0.0.0","Manages license keys by importing registry file in system registry.","BaseLmPlugin.Resources.Icons.registry.png")]
     [LicenseManagerPlugin(KeyType = typeof(RegistryLicenseKey))]
     public class RegistyImportPlugin : LicenseManagerBase
     {

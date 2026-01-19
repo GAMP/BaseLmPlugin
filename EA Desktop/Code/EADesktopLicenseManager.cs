@@ -16,7 +16,7 @@ namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
     [Guid(Identifiers.EADesktop)]
-    [PluginMetadata("EA Desktop", "1.0.0.0", "Manages by launching ea desktop process with auth token.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.eadesktop.png")]
+    [PluginMetadata("EA Desktop", "1.0.0.0", "Manages by launching ea desktop process with auth token.", "BaseLmPlugin.Resources.Icons.eadesktop.png")]
     [LicenseManagerPlugin(ConfigurationType = typeof(EADesktopLicenseManager), KeyType = typeof(EADesktopLicenseKey))]
     public class EADesktopLicenseManager : SteamLicenseManager,
         IExecutionDivertPlugin

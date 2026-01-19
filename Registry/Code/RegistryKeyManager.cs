@@ -10,7 +10,7 @@ namespace BaseLmPlugin
 {
     [Export(typeof(ILicenseManagerPlugin))]
     [Guid(Identifiers.Registry)]
-    [PluginMetadata("Registry", "1.0.0.0", "Manages license keys by setting key values in system registry.", "BaseLmPlugin;BaseLmPlugin.Resources.Icons.registry.png")]
+    [PluginMetadata("Registry", "1.0.0.0", "Manages license keys by setting key values in system registry.", "BaseLmPlugin.Resources.Icons.registry.png")]
     [LicenseManagerPlugin(ConfigurationType = typeof(RegistryLicenseManagerSettings), KeyType = typeof(RegistryLicenseKey))]
     public class RegistryLicenseManager : ConfigurableLicenseManagerBase
     {

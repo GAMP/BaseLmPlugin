@@ -11,7 +11,7 @@ namespace BaseLmPlugin
         "Instance",
         "1.0.0.0",
         "Manages license by limiting application instances.",
-        "BaseLmPlugin;BaseLmPlugin.Resources.Icons.instance.png")]
+        "BaseLmPlugin.Resources.Icons.instance.png")]
     [LicenseManagerPlugin(KeyType = typeof(InstanceKey))]
     public class InstanceManagementPlugin : LicenseManagerBase
     {  

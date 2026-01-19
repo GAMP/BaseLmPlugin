@@ -13,7 +13,7 @@ namespace BaseLmPlugin
     [PluginMetadata("Minecraft",
         "1.0.0.0",
         "Manages license keys by writing auth token to application configuration.",
-        "BaseLmPlugin;BaseLmPlugin.Resources.Icons.minecraft.png")]
+        "BaseLmPlugin.Resources.Icons.minecraft.png")]
     [LicenseManagerPlugin(KeyType = typeof(MineCraftLicenseKey))]
     public class MineCraftLicenseManager : LicenseManagerBase
     {

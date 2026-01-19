@@ -18,7 +18,7 @@ namespace BaseLmPlugin
         "Steam",
         "1.0.0.0",
         "Manages license keys by launching Steam with login parameters.",
-        "BaseLmPlugin;BaseLmPlugin.Resources.Icons.steam.png")]
+        "BaseLmPlugin.Resources.Icons.steam.png")]
     [LicenseManagerPlugin(ConfigurationType = typeof(SteamLicenseManagerSettings), KeyType = typeof(SteamLicenseKey))]
     public class SteamLicenseManager : ConfigurableLicenseManagerBase,
         IExecutionDivertPlugin
