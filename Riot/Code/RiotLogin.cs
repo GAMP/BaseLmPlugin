@@ -8,7 +8,7 @@ using WindowsInput;
 
 namespace BaseLmPlugin
 {
-    public class RiotLogin
+    public sealed class RiotLogin
     {
         public static bool InputLogin(int processId, string username, string password)
         {

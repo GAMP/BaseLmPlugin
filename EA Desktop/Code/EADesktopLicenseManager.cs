@@ -21,7 +21,7 @@ namespace BaseLmPlugin
     public class EADesktopLicenseManager : SteamLicenseManager,
         IExecutionDivertPlugin
     {
-        readonly string[] processKillList = new[] { "EALauncher", "EALaunchHelper", "EADesktop" };
+        readonly string[] processKillList = ["EALauncher", "EALaunchHelper", "EADesktop"];
 
         public override void Install(IApplicationLicense license, IExecutionContext context, ref bool forceCreation)
         {

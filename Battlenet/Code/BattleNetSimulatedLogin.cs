@@ -12,8 +12,6 @@ namespace BaseLmPlugin
 {
     public static class BattleNetSimulatedLogin
     {
-        #region FUNCTIONS
-
         public static void Login(int targetProcessId, string username, string password)
         {
             //get child process
@@ -210,39 +208,5 @@ namespace BaseLmPlugin
 
             return null;
         }
-
-        private static Pixel GetPixelAtLocation(IntPtr windowHandle,int x,int y)
-        {
-            //get the main window instance
-            WindowInfo info = new(windowHandle);
-
-            if (info.IsMinimized)
-                info.Restore();
-
-            info.BringToFront();
-
-            //create window rect
-            Rectangle rect = new(info.Location.X, info.Location.Y, info.Width, info.Height);
-
-            //create bitmap image based on window size
-            var screenImage = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            //copy image from screen
-            using (Graphics g = Graphics.FromImage(screenImage))
-            {
-                g.CopyFromScreen(rect.Left, rect.Top, 0, 0, info.Size, CopyPixelOperation.SourceCopy);
-            }
-
-            using (ImageTraverser traverser = new(screenImage))
-            {
-                var query = traverser
-                    .Where(pixel => pixel.Location.X == x)
-                    .Where(pixel => pixel.Location.Y == y);
-
-                return query.FirstOrDefault();
-            }
-        }
-
-        #endregion
     }
 }

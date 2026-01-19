@@ -289,7 +289,7 @@ namespace BaseLmPlugin
         /// <param name="info">Process info state object.</param>
         /// <param name="processInfo">Local process info object.</param>
         /// <returns>True for success, otherwise false.</returns>
-        protected bool TryGetProcessInfo(object info, out DynamicProcessInfo processInfo)
+        protected static bool TryGetProcessInfo(object info, out DynamicProcessInfo processInfo)
         {
             //assign default value
             processInfo = null;

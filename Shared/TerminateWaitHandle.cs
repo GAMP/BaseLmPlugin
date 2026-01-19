@@ -4,13 +4,10 @@ namespace BaseLmPlugin
 {
     public sealed class TerminateWaitHandle : ManualResetEventSlim
     {
-        #region CONSTRUCTOR
         public TerminateWaitHandle(bool initialState)
             : base(initialState)
         { }
-        #endregion
 
-        #region PROPERTIES
         /// <summary>
         /// Gets or sets if handle is waiting for termination.
         /// </summary>
@@ -19,6 +16,7 @@ namespace BaseLmPlugin
             get;
             internal set;
         }
+
         /// <summary>
         /// Gets process name.
         /// </summary>
@@ -27,6 +25,5 @@ namespace BaseLmPlugin
             get;
             internal set;
         }
-        #endregion
     }
 }

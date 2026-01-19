@@ -16,8 +16,6 @@ namespace BaseLmPlugin
     {
         public override void Install(IApplicationLicense license, Client.IExecutionContext context, ref bool forceCreation)
         {
-            #region INITIALIZE VARIABLES
-
             //gte current settings
             var settings = SettingsAs<RegistryLicenseManagerSettings>();
 
@@ -34,7 +32,7 @@ namespace BaseLmPlugin
             var keyPath = settings.KeyPath;
 
             //key path can be null if invalid registry path specified
-            //we alredy check that in the upper statement but just in case
+            //we already check that in the upper statement but just in case
             if (string.IsNullOrWhiteSpace(keyPath))
                 throw new ArgumentNullException(nameof(keyPath));
 
@@ -56,12 +54,11 @@ namespace BaseLmPlugin
             var stringKeyValue = licenseKey.Value;
 
             //initialize key value
-            //this is the value that will be writtent to registry
+            //this is the value that will be written to registry
             object keyValue = null;
 
             if (settings.ValueKind == RegistryValueKind.Binary)
             {
-                #region CONVERT STRING TO BINARY
                 try
                 {
                     string[] bytes = stringKeyValue.Split(',');
@@ -78,16 +75,12 @@ namespace BaseLmPlugin
                 {
                     throw new Exception("Could not convert binary data.", ex);
                 }
-                #endregion
             }
             else
             {
                 keyValue = Environment.ExpandEnvironmentVariables(stringKeyValue);
             }
 
-            #endregion
-
-            #region GET BASE KEY
             RegistryKey baseKey = null;
             switch (settings.Hive)
             {
@@ -112,9 +105,6 @@ namespace BaseLmPlugin
                 default:
                     throw new ArgumentException("Invalid registry hive specified.");
             }
-            #endregion
-
-            #region SET VALUES
 
             var destinationKey = baseKey.OpenSubKey(keyPath, true);
 
@@ -134,8 +124,6 @@ namespace BaseLmPlugin
             {
                 destinationKey?.Close();
             }
-
-            #endregion
         }
 
         public override IPluginSettings GetSettingsInstance()

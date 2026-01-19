@@ -212,7 +212,7 @@ namespace BaseLmPlugin
             return false;
         }
 
-        private string GetUplayPath()
+        private static string GetUplayPath()
         {
             string modulePath = string.Empty;
             using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(@"Software\Ubisoft\Launcher", false))
@@ -223,7 +223,7 @@ namespace BaseLmPlugin
             return modulePath;
         }
 
-        private void ClearLoginData()
+        private static void ClearLoginData()
         {
             try
             {

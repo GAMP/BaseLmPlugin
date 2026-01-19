@@ -117,6 +117,51 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="LICENSE_KEY_ACCOUNT_ID_NAME" xml:space="preserve">
+    <value>Account id</value>
+  </data>
+  <data name="LICENSE_KEY_PASSWORD_NAME" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="LICENSE_KEY_USER_NAME_NAME" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_HIVE_DESCRIPTION" xml:space="preserve">
+    <value>Specifies registry hive</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_HIVE_NAME" xml:space="preserve">
+    <value>Registry hive</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_PATH_DESCRIPTION" xml:space="preserve">
+    <value>Specifies registry path</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_PATH_NAME" xml:space="preserve">
+    <value>Registry path</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_VALUE_KIND_DESCRIPTION" xml:space="preserve">
+    <value>Specifies value kind</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_VALUE_KIND_NAME" xml:space="preserve">
+    <value>Value kind</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_IGNORE_LIST_DESCRIPTION" xml:space="preserve">
+    <value>Semicolon-separated list of process names (or full executable names) to ignore when evaluating the process tree. Ignored processes won’t keep the session alive and won’t affect exit detection.</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_IGNORE_LIST_NAME" xml:space="preserve">
+    <value>Ignored processes in tree</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_WAIT_TIMEOUT_DESCRIPTION" xml:space="preserve">
+    <value>How long to wait before ending the session after the tracked process tree is considered exited. This helps avoid false exits during quick restarts or launcher handoffs.</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_WAIT_TIMEOUT_NAME" xml:space="preserve">
+    <value>Grace period after tree exit</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_TERMINATE_CHILD_ON_EXIT_DESCRIPTION" xml:space="preserve">
+    <value>Enables termination of child processes</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_TERMINATE_CHILD_ON_EXIT_NAME" xml:space="preserve">
+    <value>End session when process tree exits</value>
+  </data>
   <data name="PROCESS_LICENSE_MANAGER_DESCRIPTION" xml:space="preserve">
     <value>Manages license keys by passing them to external executables</value>
   </data>

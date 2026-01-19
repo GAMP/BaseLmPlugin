@@ -16,17 +16,9 @@ namespace BaseLmPlugin
 {
     public class EpicLicenseHandler
     {
-        #region READ ONLY FIELDS
         private static readonly string APP_DATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        //settings file name
         public static readonly string USER_SETTINGS_FILE_PATH = Path.Combine(APP_DATA_PATH, "EpicGamesLauncher", "Saved", "Config", "Windows", "GameUserSettings.ini");
-        #endregion
-
-        #region CONSTANTS
         private const string EPIC_PROCESS_NAME = "EpicGamesLauncher";
-        #endregion
-
-        #region FUNCTIONS
 
         public static EpicInitResult Initiate(EpicInitParameters parameters, IExecutionContext cx)
         {
@@ -91,7 +83,7 @@ namespace BaseLmPlugin
             {
 #if RELEASE
                 //block user input
-                User32.BlockInput(true);               
+                User32.BlockInput(true);
 #endif
 
                 //wait for child processes to be created
@@ -139,7 +131,7 @@ namespace BaseLmPlugin
                 window.BringToFront();
 
                 //potential forgot password button pixel color
-                var loginDisabledButtonColor = Color.FromArgb(255,38, 187, 255);
+                var loginDisabledButtonColor = Color.FromArgb(255, 38, 187, 255);
                 var loginButtonColor = Color.FromArgb(255, 68, 68, 72);
 
                 //wait for the target pixel to be created
@@ -160,14 +152,14 @@ namespace BaseLmPlugin
 
                 System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width / 2), window.Location.Y + 64);
                 mouse.LeftButtonClick();
-                
+
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);           
+                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
 
                 //user name
-                Thread.Sleep(SMALL_DELAY);           
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
                 keyboard.TextEntry(username);
@@ -180,7 +172,7 @@ namespace BaseLmPlugin
                 var loginPixel = WaitForPixel(window.Handle, [loginButtonColor], null, null, 10, 1000);
 
                 //check if pixel is found
-                
+
                 if (loginPixel == null)
                 {
                     //even if we did not find the correct pixel proceed anyway
@@ -217,38 +209,6 @@ namespace BaseLmPlugin
             }
         }
 
-        private static Pixel WaitForPixel(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250)
-        {
-            if (windowHandle == IntPtr.Zero)
-                throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
-
-            for (int i = 1; i <= retries; i++)
-            {
-                var screenImage = Imaging.CaptureWindowImage(windowHandle);
-
-                using (ImageTraverser traverser = new ImageTraverser(screenImage))
-                {
-                    var query = traverser
-                        .Where(e => e.Color == color);
-
-                    if (x.HasValue)
-                        query = query.Where(pixel => pixel.Location.X == x);
-
-                    if (y.HasValue)
-                        query = query.Where(pixel => pixel.Location.Y == y);
-
-                    var foundPixel = query.FirstOrDefault();
-
-                    if (foundPixel != null)
-                        return foundPixel;
-
-                    Thread.Sleep(delay);
-                }
-            }
-
-            return null;
-        }
-
         private static Pixel WaitForPixel(IntPtr windowHandle, Color[] color, int? x = default, int? y = null, int retries = 100, int delay = 250)
         {
             if (windowHandle == IntPtr.Zero)
@@ -281,11 +241,8 @@ namespace BaseLmPlugin
 
             return null;
         }
-
-        #endregion
     }
 
-    #region EPICINITPARAMETERS
     /// <summary>
     /// Epic login parameters.
     /// </summary>
@@ -335,9 +292,7 @@ namespace BaseLmPlugin
 
         #endregion
     }
-    #endregion    
 
-    #region EPICINITRESULTCODE
     /// <summary>
     /// Init function result codes.
     /// </summary>
@@ -347,9 +302,7 @@ namespace BaseLmPlugin
         Failure = 1,
         Canceled = 2,
     }
-    #endregion
 
-    #region EPICINITRESULT
     /// <summary>
     /// Init function result.
     /// </summary>
@@ -421,9 +374,6 @@ namespace BaseLmPlugin
 
         #endregion
     }
-    #endregion
-
-    #region WIN32
 
     class NativeMethods
     {
@@ -440,6 +390,4 @@ namespace BaseLmPlugin
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetCursorPos([In] int X, [In] int Y);
     }
-
-    #endregion
 }
