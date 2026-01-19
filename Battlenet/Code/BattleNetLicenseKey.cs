@@ -7,6 +7,6 @@ namespace BaseLmPlugin
     /// </summary>
     [Serializable()]
     public class BattleNetLicenseKey : UserNamePasswordLicenseKeyBase
-    {
+    {      
     }
 }

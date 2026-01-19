@@ -82,5 +82,8 @@ namespace BaseLmPlugin
         {
             return this.KeyString;
         }
+
+        // override in order to hide (make no discoverable) the Value property from base class        
+        public override string Value { get => base.Value; set => base.Value = value; }
     }
 }
