@@ -1,6 +1,6 @@
 ﻿using Client;
 using CoreLib.Diagnostics;
-using Gizmo.Extensibility;
+using Gizmo.Extensibility.Abstractions;
 using GizmoShell;
 using IntegrationLib;
 using Microsoft.Win32;

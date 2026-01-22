@@ -1,5 +1,5 @@
 ﻿using Client;
-using Gizmo.Extensibility;
+using Gizmo.Extensibility.Abstractions;
 using IntegrationLib;
 using System;
 using System.ComponentModel.Composition;

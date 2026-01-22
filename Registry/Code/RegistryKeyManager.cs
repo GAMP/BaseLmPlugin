@@ -1,4 +1,4 @@
-﻿using Gizmo.Extensibility;
+﻿using Gizmo.Extensibility.Abstractions;
 using IntegrationLib;
 using Microsoft.Win32;
 using System;
