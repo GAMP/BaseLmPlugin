@@ -1,4 +1,4 @@
-﻿using Gizmo.Shared.Plugins;
+﻿using Gizmo.Extensibility;
 using IntegrationLib;
 using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;

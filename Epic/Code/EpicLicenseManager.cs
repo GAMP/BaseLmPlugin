@@ -1,6 +1,6 @@
 ﻿using Client;
 using Gizmo.Client;
-using Gizmo.Shared.Plugins;
+using Gizmo.Extensibility;
 using IntegrationLib;
 using System;
 using System.ComponentModel;

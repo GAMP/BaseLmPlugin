@@ -1,6 +1,6 @@
 ﻿using Client;
 using CoreLib.Diagnostics;
-using Gizmo.Shared.Plugins;
+using Gizmo.Extensibility;
 using IntegrationLib;
 using SharedLib;
 using System;
