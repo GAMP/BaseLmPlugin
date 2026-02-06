@@ -64,7 +64,7 @@ namespace BaseLmPlugin
                 {
                     try
                     {
-                        if (e.State ==  Gizmo.LoginState.LoggingOut)
+                        if (e.State == LoginState.LoggingOut)
                             cancellationTokenSource.Cancel();
                     }
                     catch
