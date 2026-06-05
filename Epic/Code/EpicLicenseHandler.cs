@@ -9,6 +9,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Win32API.Com.Shell32;
+using Win32API.Headers.WinUser.Enumerations;
 using Win32API.Modules;
 using WindowsInput;
 
@@ -16,9 +18,17 @@ namespace BaseLmPlugin
 {
     public class EpicLicenseHandler
     {
+        #region READ ONLY FIELDS
         private static readonly string APP_DATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        //settings file name
         public static readonly string USER_SETTINGS_FILE_PATH = Path.Combine(APP_DATA_PATH, "EpicGamesLauncher", "Saved", "Config", "Windows", "GameUserSettings.ini");
+        #endregion
+
+        #region CONSTANTS
         private const string EPIC_PROCESS_NAME = "EpicGamesLauncher";
+        #endregion
+
+        #region FUNCTIONS
 
         public static EpicInitResult Initiate(EpicInitParameters parameters, IExecutionContext cx)
         {
@@ -83,7 +93,7 @@ namespace BaseLmPlugin
             {
 #if RELEASE
                 //block user input
-                User32.BlockInput(true);
+                User32.BlockInput(true);               
 #endif
 
                 //wait for child processes to be created
@@ -126,22 +136,15 @@ namespace BaseLmPlugin
                 //check if window is minimized and restore it
                 if (window.IsMinimized)
                     User32.ShowWindow(window.Handle, Win32API.Headers.WinUser.Enumerations.SW.SW_RESTORE);
+     
 
                 //bring main window to front
                 window.BringToFront();
 
-                //potential forgot password button pixel color
-                var loginDisabledButtonColor = Color.FromArgb(255, 38, 187, 255);
-                var loginButtonColor = Color.FromArgb(255, 68, 68, 72);
-
-                //wait for the target pixel to be created
-                var pixel = WaitForPixel(window.Handle, [loginDisabledButtonColor], null, null, 10, 1000);
-
-                //check if pixel is found
-                if (pixel == null)
-                {
-                    //even if we did not find the correct pixel proceed anyway
-                }
+                //wait for Epic web UI to load by finding the cyan "Continue" button
+                //this also gives us an anchor point since the form is fixed-size
+                var cyanColor = Color.FromArgb(255, 38, 187, 255);
+                var continueButtonPixel = WaitForPixel(window.Handle, [cyanColor], null, null, 30, 1000);
 
                 //create simulators
                 KeyboardSimulator keyboard = new();
@@ -150,13 +153,17 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                System.Windows.Forms.Cursor.Position = new Point(window.Location.X + (window.Width / 2), window.Location.Y + 64);
-                mouse.LeftButtonClick();
-
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                //click on the email input field using SendMessage (bypasses DPI scaling issues)
+                //use image coordinates directly — they match the window's client area
+                if (continueButtonPixel != null)
+                {
+                    using (var img = Imaging.CaptureWindowImage(window.Handle))
+                    {
+                        int clickX = img.Width / 2;
+                        int clickY = continueButtonPixel.Location.Y - 50;
+                        SendClickToWindow(window.Handle, clickX, clickY);
+                    }
+                }
 
                 //user name
                 Thread.Sleep(SMALL_DELAY);
@@ -168,22 +175,27 @@ namespace BaseLmPlugin
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
                 Thread.Sleep(SMALL_DELAY);
 
-                //wait for the target pixel to be created
-                var loginPixel = WaitForPixel(window.Handle, [loginButtonColor], null, null, 10, 1000);
+                //wait for password screen to load by finding the cyan "Forgot password?" link
+                //this also gives us an anchor point since the form is fixed-size (not proportional)
+                cyanColor = Color.FromArgb(255, 38, 187, 255);
+                var forgotPasswordPixel = WaitForPixel(window.Handle, [cyanColor], null, null, 30, 1000);
 
-                //check if pixel is found
+                //bring main window to front
+                window.BringToFront();
 
-                if (loginPixel == null)
+                //click on the password input field using SendMessage (bypasses DPI scaling issues)
+                if (forgotPasswordPixel != null)
                 {
-                    //even if we did not find the correct pixel proceed anyway
+                    using (var img = Imaging.CaptureWindowImage(window.Handle))
+                    {
+                        int clickX = img.Width / 2;
+                        int clickY = forgotPasswordPixel.Location.Y - 50;
+                        SendClickToWindow(window.Handle, clickX, clickY);
+                    }
                 }
 
-                Thread.Sleep(5000);
-
-                //focus on the password field
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-
                 //password
+                Thread.Sleep(SMALL_DELAY);
                 keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
                 keyboard.TextEntry(password);
@@ -207,6 +219,38 @@ namespace BaseLmPlugin
                 User32.BlockInput(false);
 #endif
             }
+        }
+
+        private static Pixel WaitForPixel(IntPtr windowHandle, Color color, int? x = default, int? y = null, int retries = 100, int delay = 250)
+        {
+            if (windowHandle == IntPtr.Zero)
+                throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
+
+            for (int i = 1; i <= retries; i++)
+            {
+                var screenImage = Imaging.CaptureWindowImage(windowHandle);
+
+                using (ImageTraverser traverser = new ImageTraverser(screenImage))
+                {
+                    var query = traverser
+                        .Where(e => e.Color == color);
+
+                    if (x.HasValue)
+                        query = query.Where(pixel => pixel.Location.X == x);
+
+                    if (y.HasValue)
+                        query = query.Where(pixel => pixel.Location.Y == y);
+
+                    var foundPixel = query.FirstOrDefault();
+
+                    if (foundPixel != null)
+                        return foundPixel;
+
+                    Thread.Sleep(delay);
+                }
+            }
+
+            return null;
         }
 
         private static Pixel WaitForPixel(IntPtr windowHandle, Color[] color, int? x = default, int? y = null, int retries = 100, int delay = 250)
@@ -241,8 +285,23 @@ namespace BaseLmPlugin
 
             return null;
         }
+
+        /// <summary>
+        /// Sends a mouse click to a window using SendMessage with client-area coordinates.
+        /// Bypasses DPI scaling issues that occur with Cursor.Position.
+        /// </summary>
+        private static void SendClickToWindow(IntPtr hwnd, int x, int y)
+        {
+            IntPtr lParam = (IntPtr)((y << 16) | (x & 0xFFFF));
+            User32.SendMessage(hwnd, 0x0201, IntPtr.Zero, lParam); //WM_LBUTTONDOWN
+            Thread.Sleep(50);
+            User32.SendMessage(hwnd, 0x0202, IntPtr.Zero, lParam); //WM_LBUTTONUP
+        }
+
+        #endregion
     }
 
+    #region EPICINITPARAMETERS
     /// <summary>
     /// Epic login parameters.
     /// </summary>
@@ -292,7 +351,9 @@ namespace BaseLmPlugin
 
         #endregion
     }
+    #endregion    
 
+    #region EPICINITRESULTCODE
     /// <summary>
     /// Init function result codes.
     /// </summary>
@@ -302,7 +363,9 @@ namespace BaseLmPlugin
         Failure = 1,
         Canceled = 2,
     }
+    #endregion
 
+    #region EPICINITRESULT
     /// <summary>
     /// Init function result.
     /// </summary>
@@ -374,6 +437,9 @@ namespace BaseLmPlugin
 
         #endregion
     }
+    #endregion
+
+    #region WIN32
 
     class NativeMethods
     {
@@ -390,4 +456,6 @@ namespace BaseLmPlugin
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetCursorPos([In] int X, [In] int Y);
     }
+
+    #endregion
 }
