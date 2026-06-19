@@ -9,8 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Win32API.Com.Shell32;
-using Win32API.Headers.WinUser.Enumerations;
 using Win32API.Modules;
 using WindowsInput;
 
