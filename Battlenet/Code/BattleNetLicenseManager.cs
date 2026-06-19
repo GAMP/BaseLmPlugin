@@ -17,7 +17,7 @@ namespace BaseLmPlugin
         "1.0.0.0",
         "Manages license keys by sending credentials input to application window.",
         "BaseLmPlugin.Resources.Icons.battlenet.png")]
-    [LicenseManagerPlugin(ConfigurationType = typeof(BattleNetLicenseManager), KeyType = typeof(BattleNetLicenseKey))]
+    [LicenseManagerPlugin(ConfigurationType = typeof(BattleNetManagerSettings), KeyType = typeof(BattleNetLicenseKey))]
     public class BattleNetLicenseManager : SteamLicenseManager
     {
         private readonly string[] processImageFileNames =
