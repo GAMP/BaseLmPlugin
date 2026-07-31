@@ -127,6 +127,16 @@ namespace BaseLmPlugin
                             DIVERT_EXECUTION = true;
                         }
                     }
+                    else if (result.InitResult == EpicInitResultCode.ManualSignInRequired)
+                    {
+                        //automation could not complete the sign in (e.g. Epic captcha / security check)
+                        //the launcher is left running so the user can finish signing in manually;
+                        //still divert execution to the launcher instead of launching the game directly
+                        if (result.CreatedProcess != null)
+                            DIVERT_EXECUTION = true;
+
+                        context.WriteMessage("Epic automatic sign-in could not be completed (security check). Please sign in manually in the Epic Games Launcher.");
+                    }
                     else if (result.InitResult == EpicInitResultCode.Canceled)
                     {
                         //do nothing
