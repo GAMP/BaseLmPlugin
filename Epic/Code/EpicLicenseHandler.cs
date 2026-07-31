@@ -45,9 +45,15 @@ namespace BaseLmPlugin
                     throw new Exception("Epic launcher process was not created.");
 
             }
+            catch (EpicManualSignInRequiredException ex)
+            {
+                //automation aborted (captcha / security check / unexpected screen);
+                //the launcher is still running so the user can complete the sign in by hand
+                return new EpicInitResult(EpicInitResultCode.ManualSignInRequired, ex.LauncherProcess, ex);
+            }
             catch (Exception ex)
             {
-                //process starting failed, return error result here 
+                //process starting failed, return error result here
                 return new EpicInitResult(ex);
             }
         }
@@ -90,8 +96,10 @@ namespace BaseLmPlugin
             try
             {
 #if RELEASE
-                //block user input
-                User32.BlockInput(true);               
+                //block user input. NOTE: BlockInput(true) exempts the calling thread, so the
+                //synthetic mouse injection (SetCursorPos / mouse_event) issued below from this same
+                //thread still works — it only blocks a physical user from interfering mid-login.
+                User32.BlockInput(true);
 #endif
 
                 //wait for child processes to be created
@@ -144,6 +152,11 @@ namespace BaseLmPlugin
                 var cyanColor = Color.FromArgb(255, 38, 187, 255);
                 var continueButtonPixel = WaitForPixel(window.Handle, [cyanColor], null, null, 30, 1000);
 
+                //if the email screen never rendered its cyan anchor we cannot proceed safely;
+                //abort cleanly and leave the launcher on-screen for a manual sign in
+                if (continueButtonPixel == null)
+                    throw new EpicManualSignInRequiredException("Epic sign-in email screen was not detected; manual sign in required.", targetProcess);
+
                 //create simulators
                 KeyboardSimulator keyboard = new();
                 MouseSimulator mouse = new();
@@ -151,16 +164,13 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                //click on the email input field using SendMessage (bypasses DPI scaling issues)
-                //use image coordinates directly — they match the window's client area
-                if (continueButtonPixel != null)
+                //click on the email input field with a real mouse click so the CEF web view focuses it
+                //(the field sits ~50px above the cyan "Continue" anchor in the captured image)
+                using (var img = Imaging.CaptureWindowImage(window.Handle))
                 {
-                    using (var img = Imaging.CaptureWindowImage(window.Handle))
-                    {
-                        int clickX = img.Width / 2;
-                        int clickY = continueButtonPixel.Location.Y - 50;
-                        SendClickToWindow(window.Handle, clickX, clickY);
-                    }
+                    int clickX = img.Width / 2;
+                    int clickY = continueButtonPixel.Location.Y - 50;
+                    SendClickToWindow(window, clickX, clickY);
                 }
 
                 //user name
@@ -171,25 +181,37 @@ namespace BaseLmPlugin
 
                 //send enter key to switch to next state (password field)
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
-                Thread.Sleep(SMALL_DELAY);
 
-                //wait for password screen to load by finding the cyan "Forgot password?" link
-                //this also gives us an anchor point since the form is fixed-size (not proportional)
+                //give the email screen time to start transitioning away before we look for the
+                //password anchor. The email and password screens share the same cyan color, so
+                //acting too early would lock onto the still-visible email screen.
+                Thread.Sleep(2 * SMALL_DELAY);
+
+                //wait for the password screen to load AND settle. We look for the cyan "Forgot
+                //password?" link, but only accept it once its position has been stable for several
+                //consecutive reads — otherwise we could click a mid-transition frame (the anchor's
+                //Y jumps around while the new screen animates in) before the password field exists.
+                //NOTE: a null result here also covers the hCaptcha "One more step" screen, which
+                //contains no cyan pixels — in that case we abort without typing the password.
                 cyanColor = Color.FromArgb(255, 38, 187, 255);
-                var forgotPasswordPixel = WaitForPixel(window.Handle, [cyanColor], null, null, 30, 1000);
+                var forgotPasswordPixel = WaitForStablePixel(window.Handle, [cyanColor], 4, 60, 250);
+
+                //if the password screen never appeared (captcha / verification / unexpected screen)
+                //abort cleanly: do NOT type the password into whatever is on screen, and leave the
+                //launcher running so a human can complete the sign in manually
+                if (forgotPasswordPixel == null)
+                    throw new EpicManualSignInRequiredException("Epic password screen was not detected (possible security check); manual sign in required.", targetProcess);
 
                 //bring main window to front
                 window.BringToFront();
 
-                //click on the password input field using SendMessage (bypasses DPI scaling issues)
-                if (forgotPasswordPixel != null)
+                //click on the password input field with a real mouse click so the CEF web view focuses it
+                //(the field sits ~50px above the cyan "Forgot password?" anchor in the captured image)
+                using (var img = Imaging.CaptureWindowImage(window.Handle))
                 {
-                    using (var img = Imaging.CaptureWindowImage(window.Handle))
-                    {
-                        int clickX = img.Width / 2;
-                        int clickY = forgotPasswordPixel.Location.Y - 50;
-                        SendClickToWindow(window.Handle, clickX, clickY);
-                    }
+                    int clickX = img.Width / 2;
+                    int clickY = forgotPasswordPixel.Location.Y - 50;
+                    SendClickToWindow(window, clickX, clickY);
                 }
 
                 //password
@@ -212,10 +234,9 @@ namespace BaseLmPlugin
             }
             finally
             {
-#if RELEASE
-                //unlock user input
+                //always unblock input (no-op if it was never blocked); pairs with the RELEASE
+                //BlockInput(true) above and guards against leaving input blocked on any exit path
                 User32.BlockInput(false);
-#endif
             }
         }
 
@@ -285,15 +306,83 @@ namespace BaseLmPlugin
         }
 
         /// <summary>
-        /// Sends a mouse click to a window using SendMessage with client-area coordinates.
-        /// Bypasses DPI scaling issues that occur with Cursor.Position.
+        /// Waits until the topmost matching pixel's Y position holds STILL for
+        /// <paramref name="stableSamples"/> consecutive reads, then returns it.
+        ///
+        /// Rationale: the email and password screens share the same cyan color, and during the
+        /// screen transition the anchor's Y jumps around (email anchor -> transient -> password
+        /// anchor) before settling. A plain WaitForPixel returns instantly and can lock onto the
+        /// still-visible email screen or a mid-animation frame, causing the click (and typed
+        /// password) to land on the wrong screen before the password field exists. Requiring the
+        /// anchor to be stable across several samples guarantees we only act once the new screen
+        /// has fully rendered and stopped moving.
         /// </summary>
-        private static void SendClickToWindow(IntPtr hwnd, int x, int y)
+        private static Pixel WaitForStablePixel(IntPtr windowHandle, Color[] color, int stableSamples = 4, int retries = 60, int delay = 250)
         {
-            IntPtr lParam = (IntPtr)((y << 16) | (x & 0xFFFF));
-            User32.SendMessage(hwnd, 0x0201, IntPtr.Zero, lParam); //WM_LBUTTONDOWN
-            Thread.Sleep(50);
-            User32.SendMessage(hwnd, 0x0202, IntPtr.Zero, lParam); //WM_LBUTTONUP
+            if (windowHandle == IntPtr.Zero)
+                throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
+
+            Pixel lastPixel = null;
+            int stableCount = 0;
+
+            for (int i = 1; i <= retries; i++)
+            {
+                Pixel foundPixel;
+                using (var screenImage = Imaging.CaptureWindowImage(windowHandle))
+                using (ImageTraverser traverser = new ImageTraverser(screenImage))
+                {
+                    foundPixel = traverser
+                        .Where(e => color.Contains(e.Color))
+                        .FirstOrDefault();
+                }
+
+                if (foundPixel != null && lastPixel != null && foundPixel.Location.Y == lastPixel.Location.Y)
+                {
+                    stableCount++;
+                    if (stableCount >= stableSamples)
+                        return foundPixel;
+                }
+                else
+                {
+                    //position changed (or nothing found yet) — reset the stability counter
+                    stableCount = foundPixel != null ? 1 : 0;
+                }
+
+                lastPixel = foundPixel;
+                Thread.Sleep(delay);
+            }
+
+            //timed out without stabilizing — return whatever we last saw (may be null)
+            return lastPixel;
+        }
+
+        /// <summary>
+        /// Performs a real hardware-level left click at the given window-relative coordinates.
+        /// The coordinates are relative to <see cref="Imaging.CaptureWindowImage(IntPtr)"/> output,
+        /// which is captured from the window DC (origin = window top-left, includes borders), so we
+        /// convert to screen coordinates by adding the window rectangle origin.
+        ///
+        /// A synthetic WM_LBUTTONDOWN/WM_LBUTTONUP (SendMessage) is NOT used here: Epic's login UI is
+        /// a Chromium/CEF web view, and a posted click does not set keyboard focus on its input
+        /// fields, so any text typed afterwards is silently dropped. Injecting a genuine mouse click
+        /// via SetCursorPos + mouse_event focuses the field the same way a physical click would.
+        ///
+        /// NOTE: this still works while User32.BlockInput(true) is in effect because BlockInput
+        /// exempts the calling thread — the injection below runs on that same thread.
+        /// </summary>
+        private static void SendClickToWindow(WindowInfo window, int windowRelativeX, int windowRelativeY)
+        {
+            //map window-relative coordinates to absolute screen coordinates
+            var windowRect = window.Rectangle;
+            int screenX = windowRect.Left + windowRelativeX;
+            int screenY = windowRect.Top + windowRelativeY;
+
+            //move the cursor and inject a real left click
+            NativeMethods.SetCursorPos(screenX, screenY);
+            Thread.Sleep(60);
+            NativeMethods.mouse_event(NativeMethods.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
+            Thread.Sleep(60);
+            NativeMethods.mouse_event(NativeMethods.MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
         }
 
         #endregion
@@ -360,6 +449,9 @@ namespace BaseLmPlugin
         Success = 0,
         Failure = 1,
         Canceled = 2,
+        //automation could not complete (e.g. Epic captcha / security check);
+        //the launcher is left running for the user to sign in manually
+        ManualSignInRequired = 3,
     }
     #endregion
 
@@ -395,6 +487,13 @@ namespace BaseLmPlugin
         {
             //user token is required
             Exception = exception ?? throw new ArgumentNullException(nameof(exception));
+        }
+
+        public EpicInitResult(EpicInitResultCode resultCode, Process process, Exception exception) : this(resultCode)
+        {
+            //process and exception are optional for this overload (used by the manual sign-in path)
+            CreatedProcess = process;
+            Exception = exception;
         }
 
         #endregion
@@ -437,6 +536,28 @@ namespace BaseLmPlugin
     }
     #endregion
 
+    /// <summary>
+    /// Thrown when the Epic sign-in cannot be completed automatically and requires the user to
+    /// finish signing in by hand (for example when Epic presents its "One more step" captcha /
+    /// security check, or the expected login screen is not detected). The launcher is left running.
+    /// </summary>
+    public class EpicManualSignInRequiredException : Exception
+    {
+        public EpicManualSignInRequiredException(string message, Process launcherProcess = null) : base(message)
+        {
+            LauncherProcess = launcherProcess;
+        }
+
+        /// <summary>
+        /// Gets the running Epic launcher process, if one was created before the automation aborted.
+        /// The launcher is intentionally left running so the user can finish signing in manually.
+        /// </summary>
+        public Process LauncherProcess
+        {
+            get;
+        }
+    }
+
     #region WIN32
 
     class NativeMethods
@@ -453,6 +574,12 @@ namespace BaseLmPlugin
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetCursorPos([In] int X, [In] int Y);
+
+        public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
     }
 
     #endregion
