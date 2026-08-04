@@ -47,14 +47,17 @@ namespace BaseLmPlugin
         //is only ~440px, so it was never found). Values are floors chosen well clear of the real
         //measurements so they still hold if the card renders somewhat larger under display scaling.
 
-        //Height of the band, measured downward from the topmost cyan pixel, in which cyan is counted to
-        //tell the "Continue" button apart from the "Forgot password?" link.
-        private const int TOP_CYAN_BAND_HEIGHT = 60;
+        //Minimum vertical distance the input box must move to count as a real screen change. The box
+        //does not drift while stationary, and the real email -> password move is ~65px at its smallest
+        //(small window; ~307px maximized), so a small floor is enough to ignore any 1-2px jitter.
+        private const int INPUT_FIELD_MOVED_MIN_SHIFT = 20;
 
-        //If the top cyan band holds at least this many cyan pixels it is the big "Continue" button (so
-        //we are still on the email screen). Measured: button ~21600 px, link ~115 px — both identical
-        //across resolutions — so any value between the two works; 5000 sits safely in the gap.
-        private const int CONTINUE_BUTTON_CYAN_MIN = 5000;
+        //Empty input box fill colour, measured from live captures at both window sizes. Kept tight on
+        //purpose — see IsFieldFill for why a loose range breaks the whole-window scan.
+        private const int FIELD_FILL_R = 36;
+        private const int FIELD_FILL_G = 36;
+        private const int FIELD_FILL_B = 40;
+        private const int FIELD_FILL_TOLERANCE = 6;
 
         //Minimum width of the field-fill run to accept it as the password input box (measured ~440px).
         private const int PASSWORD_FIELD_MIN_WIDTH = 200;
@@ -79,6 +82,7 @@ namespace BaseLmPlugin
             public int Bottom;
             public int Left;
             public int Right;
+            public int Width;
         }
 
         #region FUNCTIONS
@@ -263,14 +267,22 @@ namespace BaseLmPlugin
                 //bring main window to front
                 window.BringToFront();
 
-                //click on the email input field with a real mouse click so the CEF web view focuses it
-                //(the field sits ~50px above the cyan "Continue" anchor in the captured image)
+                //locate the email input box itself and click its centre with a real mouse click so the
+                //CEF web view focuses it. Its position is also remembered so we can later tell that the
+                //screen has changed (the password box renders at a different height).
+                PasswordFieldInfo emailField;
                 using (var img = Imaging.CaptureWindowImage(window.Handle))
+                    emailField = FindInputField(img);
+
+                if (emailField == null)
                 {
-                    int clickX = img.Width / 2;
-                    int clickY = continueButtonPixel.Location.Y - 50;
-                    SendClickToWindow(window, clickX, clickY);
+                    Log("email input field not found");
+                    DumpSnapshot(window.Handle, "no_email_field");
+                    throw new EpicManualSignInRequiredException("Epic sign-in email field was not detected; manual sign in required.", targetProcess);
                 }
+
+                Log($"email field found: center=({emailField.CenterX},{emailField.CenterY}) X={emailField.Left}..{emailField.Right} width={emailField.Width}");
+                SendClickToWindow(window, emailField.CenterX, emailField.CenterY);
 
                 //user name
                 Thread.Sleep(SMALL_DELAY);
@@ -281,46 +293,24 @@ namespace BaseLmPlugin
                 //send enter key to switch to next state (password field)
                 keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
 
-                //wait for the email screen to be replaced by the password screen before touching the
-                //password field. The two screens are told apart by the SIZE of the topmost cyan block:
-                //the email screen's is the big "Continue" button, the password screen's is the tiny
-                //"Forgot password?" link. A fixed delay cannot do this — on a slow machine or network
-                //the email screen is still up when the delay expires and the password would be typed
-                //into the email field.
-                //NOTE: a null result here also covers the hCaptcha "One more step" screen (no cyan),
-                //in which case we abort without typing the password.
-                Log("waiting for password screen (top cyan block must shrink from button to link)");
-                var forgotPasswordPixel = WaitForPasswordScreen(window.Handle, [cyanColor], 4, 60, 250);
+                //wait for the email screen to be replaced by the password screen before typing. The
+                //signal is the INPUT BOX moving to a new vertical position and settling there — the
+                //email box and the password box render at clearly different heights. A fixed delay
+                //cannot do this: on a slow machine or network the email screen is still up when the
+                //delay expires and the password would be typed into the email field.
+                //NOTE: a null result here also covers the hCaptcha "One more step" screen, which has no
+                //input box of this kind — in that case we abort without typing the password.
+                Log($"waiting for password screen (input box must move away from Y={emailField.CenterY})");
+                var passwordField = WaitForInputFieldMoved(window.Handle, emailField.CenterY, 4, 60, 250);
 
-                //if the password screen never appeared (captcha / verification / unexpected screen)
-                //abort cleanly: do NOT type the password into whatever is on screen, and leave the
-                //launcher running so a human can complete the sign in manually
-                if (forgotPasswordPixel == null)
-                {
-                    Log("password screen NOT detected (top cyan never moved+settled)");
-                    DumpSnapshot(window.Handle, "no_password_screen");
-                    throw new EpicManualSignInRequiredException("Epic password screen was not detected (possible security check); manual sign in required.", targetProcess);
-                }
-                Log($"password screen detected; forgot-password anchor at ({forgotPasswordPixel.Location.X},{forgotPasswordPixel.Location.Y})");
-
-                //bring main window to front
-                window.BringToFront();
-
-                //The cyan "Forgot password?" link paints as part of the incoming screen's layout
-                //BEFORE the password input field becomes interactive. Clicking on the strength of the
-                //link alone lands the click (and the typed password) while the field is not ready, so
-                //the password silently goes nowhere. Locate the field box itself and wait until it is
-                //actually present before clicking — the field sits just above the anchor.
-                var passwordField = WaitForPasswordField(window.Handle, forgotPasswordPixel.Location.Y, 40, 250);
-
-                //if the field never rendered, abort rather than typing the password blindly
+                //if the screen never changed to a settled password box, abort rather than typing blindly
                 if (passwordField == null)
                 {
-                    Log("password FIELD not found (no wide field-fill run above the anchor)");
+                    Log("password screen/field not detected (input box never moved and settled)");
                     DumpSnapshot(window.Handle, "no_password_field");
                     throw new EpicManualSignInRequiredException("Epic password field did not become ready; manual sign in required.", targetProcess);
                 }
-                Log($"password field found: center=({passwordField.CenterX},{passwordField.CenterY}) X={passwordField.Left}..{passwordField.Right} width={passwordField.Right - passwordField.Left}");
+                Log($"password field found: center=({passwordField.CenterX},{passwordField.CenterY}) Y={passwordField.Top}..{passwordField.Bottom} X={passwordField.Left}..{passwordField.Right} width={passwordField.Width}");
 
                 //type the password, then VERIFY it actually landed in the field, retrying the whole
                 //click + type a few times. This is what makes the flow robust to slow paint / focus
@@ -450,201 +440,150 @@ namespace BaseLmPlugin
         }
 
         /// <summary>
-        /// Waits for the login screen to change from the EMAIL screen to the PASSWORD screen and
-        /// returns the topmost cyan pixel of the password screen once it has settled, or null on
-        /// timeout.
+        /// True if a pixel matches the input box's empty-fill colour. Measured signature is a tight
+        /// R36 G36 B40, allowed a few units of tolerance.
         ///
-        /// The reliable, resolution-independent discriminator between the two screens is the SIZE of
-        /// the topmost cyan block, not its position:
-        ///   - email screen: the topmost cyan is the big solid "Continue" BUTTON — a huge block
-        ///     (measured ~21600 cyan px in the 60px band below its top, identical at 1044x581 and
-        ///     2576x1408).
-        ///   - password screen: the topmost cyan is the thin "Forgot password?" LINK — a tiny block
-        ///     (measured ~115 px, also identical across resolutions).
-        /// An earlier approach keyed on how far the top cyan MOVED, but that distance is not constant
-        /// (~64px in a small window vs ~306px maximized, because the card is positioned differently),
-        /// so it failed at small sizes. The block size differs ~190x between the screens and does not
-        /// change with resolution, which makes it a clean signal.
-        ///
-        /// We accept a frame once the topmost cyan block has shrunk below the button threshold (so we
-        /// are on the password screen, not the email screen) AND its position has held still for
-        /// <paramref name="stableSamples"/> reads (so the transition animation has finished and the
-        /// field exists to click). Null return => screen never changed/settled (captcha / unexpected
-        /// screen); the caller aborts to a manual sign in rather than typing the password blindly.
+        /// The tolerance must stay TIGHT: the card also contains other flat greys — notably an R48
+        /// G48 B51 decoration that forms 520px wide runs, WIDER than the ~460px input box. A looser
+        /// range (an earlier version allowed R/G up to 62) matched those too, so a whole-window scan
+        /// for the widest run locked onto the decoration instead of the field.
         /// </summary>
-        private static Pixel WaitForPasswordScreen(IntPtr windowHandle, Color[] color, int stableSamples = 4, int retries = 60, int delay = 250)
+        private static bool IsFieldFill(byte r, byte g, byte b)
+        {
+            return Math.Abs(r - FIELD_FILL_R) <= FIELD_FILL_TOLERANCE
+                && Math.Abs(g - FIELD_FILL_G) <= FIELD_FILL_TOLERANCE
+                && Math.Abs(b - FIELD_FILL_B) <= FIELD_FILL_TOLERANCE;
+        }
+
+        /// <summary>
+        /// Finds the login card's text input box in a single capture, or null if none is present.
+        ///
+        /// The box is the widest horizontal run of the field-fill colour anywhere in the window. Both
+        /// login screens draw an identical ~440px wide box (the email box and the password box), so
+        /// this locates whichever one is currently on screen; callers tell them apart by position.
+        /// Detecting the FIELD — rather than a nearby cyan link — is what guarantees we only click
+        /// once the thing we are about to type into actually exists.
+        /// </summary>
+        private static PasswordFieldInfo FindInputField(Bitmap img)
+        {
+            int bestRun = 0, bestLeft = 0, bestRight = 0, bestY = 0;
+
+            for (int y = 0; y < img.Height; y++)
+            {
+                int run = 0, runStart = 0, curLeft = 0, curRight = 0, curBest = 0;
+                for (int x = 0; x < img.Width; x++)
+                {
+                    var c = img.GetPixel(x, y);
+                    if (IsFieldFill(c.R, c.G, c.B))
+                    {
+                        if (run == 0)
+                            runStart = x;
+                        run++;
+                        if (run > curBest)
+                        {
+                            curBest = run;
+                            curLeft = runStart;
+                            curRight = x;
+                        }
+                    }
+                    else
+                    {
+                        run = 0;
+                    }
+                }
+
+                if (curBest > bestRun)
+                {
+                    bestRun = curBest;
+                    bestLeft = curLeft;
+                    bestRight = curRight;
+                    bestY = y;
+                }
+            }
+
+            //require an absolute minimum run width to count as the input box. This is a FIXED pixel
+            //floor, not a fraction of the window: the card does not scale with the window, so the box
+            //stays ~440px wide whether the window is small or maximized
+            if (bestRun < PASSWORD_FIELD_MIN_WIDTH)
+                return null;
+
+            //bestY is merely the widest field-fill row, which tends to land near the top of the box
+            //(text-free rows are widest). Typed characters render at the box's vertical CENTRE, so we
+            //must find its true top and bottom. Walk up and down from bestY at a column just inside
+            //the left edge (clear of the centred text) until the fill colour ends.
+            int probeX = bestLeft + 20;
+            int top = bestY, bottom = bestY;
+            while (top - 1 >= 0 && IsFieldFill(img.GetPixel(probeX, top - 1).R, img.GetPixel(probeX, top - 1).G, img.GetPixel(probeX, top - 1).B))
+                top--;
+            while (bottom + 1 < img.Height && IsFieldFill(img.GetPixel(probeX, bottom + 1).R, img.GetPixel(probeX, bottom + 1).G, img.GetPixel(probeX, bottom + 1).B))
+                bottom++;
+
+            return new PasswordFieldInfo
+            {
+                //X = window centre: the card (and therefore the field) is horizontally centred, which
+                //holds at any resolution and avoids keying on the field's own edges (which include the
+                //eye icon on the right)
+                CenterX = img.Width / 2,
+                CenterY = (top + bottom) / 2,
+                Top = top,
+                Bottom = bottom,
+                Left = bestLeft,
+                Right = bestRight,
+                Width = bestRun,
+            };
+        }
+
+        /// <summary>
+        /// Waits for the login card's input box to MOVE away from <paramref name="fromCenterY"/> and
+        /// settle, and returns the new box — i.e. waits for the email screen to be replaced by the
+        /// password screen. Returns null on timeout.
+        ///
+        /// Tracking the input box is what makes this reliable. Earlier attempts keyed on cyan: first
+        /// on how far the topmost cyan moved (that distance is not constant — ~65px in a small window
+        /// vs ~307px maximized), then on the size of the topmost cyan block (the email screen's
+        /// "Continue" button is huge, the password screen's "Forgot password?" link is small). The
+        /// block-size check still misfired, because mid-transition the Continue button disappears
+        /// while the email screen's OTHER small cyan link ("Create an account") is still painted —
+        /// same size as the password link, so it read as "password screen" while the email screen was
+        /// still up. The input box has no such ambiguity: there is exactly one, it is the element we
+        /// are about to click, and its position changes unmistakably between the two screens.
+        ///
+        /// Any settled movement counts; no magnitude threshold is used, since a stationary box does
+        /// not drift while the real change is ~65px at worst.
+        /// </summary>
+        private static PasswordFieldInfo WaitForInputFieldMoved(IntPtr windowHandle, int fromCenterY, int stableSamples = 4, int retries = 60, int delay = 250)
         {
             if (windowHandle == IntPtr.Zero)
                 throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
 
-            Pixel lastPixel = null;
+            PasswordFieldInfo lastField = null;
             int stableCount = 0;
 
             for (int i = 1; i <= retries; i++)
             {
-                Pixel topPixel;
-                int topBandCyan;
-                using (var screenImage = Imaging.CaptureWindowImage(windowHandle))
-                using (ImageTraverser traverser = new ImageTraverser(screenImage))
-                {
-                    topPixel = traverser
-                        .Where(e => color.Contains(e.Color))
-                        .FirstOrDefault();
+                PasswordFieldInfo field;
+                using (var img = Imaging.CaptureWindowImage(windowHandle))
+                    field = FindInputField(img);
 
-                    //count cyan within the band just below the topmost cyan pixel — huge for the
-                    //Continue button, tiny for the "Forgot password?" link
-                    topBandCyan = 0;
-                    if (topPixel != null)
-                    {
-                        int bandBottom = Math.Min(topPixel.Location.Y + TOP_CYAN_BAND_HEIGHT, screenImage.Height);
-                        foreach (var e in traverser)
-                        {
-                            if (e.Location.Y >= topPixel.Location.Y && e.Location.Y < bandBottom && color.Contains(e.Color))
-                                topBandCyan++;
-                        }
-                    }
-                }
+                //a box at a different vertical position means we are no longer on the email screen
+                bool moved = field != null && Math.Abs(field.CenterY - fromCenterY) >= INPUT_FIELD_MOVED_MIN_SHIFT;
 
-                //on the password screen the top cyan block is the small link, well under the button size
-                bool onPasswordScreen = topPixel != null && topBandCyan < CONTINUE_BUTTON_CYAN_MIN;
+                Log($"WaitForInputFieldMoved try {i}/{retries}: fieldCenterY={(field != null ? field.CenterY.ToString() : "none")} (was {fromCenterY}) moved={moved} stableCount={stableCount}");
 
-                Log($"WaitForPasswordScreen try {i}/{retries}: topCyanY={(topPixel != null ? topPixel.Location.Y.ToString() : "none")} topBandCyan={topBandCyan} onPasswordScreen={onPasswordScreen} stableCount={stableCount}");
-
-                if (onPasswordScreen && lastPixel != null && topPixel.Location.Y == lastPixel.Location.Y)
+                if (moved && lastField != null && field.CenterY == lastField.CenterY)
                 {
                     stableCount++;
                     if (stableCount >= stableSamples)
-                        return topPixel;
+                        return field;
                 }
                 else
                 {
-                    //still the email screen, or on the password screen but still animating — (re)start
-                    //the stability count only once we are actually on the password screen
-                    stableCount = onPasswordScreen ? 1 : 0;
+                    //still on the email screen, or moved but still animating — (re)start the count
+                    //only once the box is actually somewhere new
+                    stableCount = moved ? 1 : 0;
                 }
 
-                lastPixel = onPasswordScreen ? topPixel : null;
-                Thread.Sleep(delay);
-            }
-
-            //timed out without the screen changing and settling. Return null: acting now would click
-            //the still-visible email screen (or a mid transition frame) and type the password into
-            //the wrong field. Callers treat null as "abort and ask for a manual sign in".
-            return null;
-        }
-
-        /// <summary>
-        /// True if a pixel matches the password field's empty-fill colour — a flat, slightly-lighter
-        /// than the card dark grey where the red and green channels are close (neutral grey). Measured
-        /// signature: R,G in [33,62], B in [37,74], |R-G| small. The card background, text and the
-        /// cyan link all fall outside this, so a long horizontal run of it marks the input box.
-        /// </summary>
-        private static bool IsFieldFill(byte r, byte g, byte b)
-        {
-            return r >= 33 && r <= 62
-                && g >= 33 && g <= 62
-                && b >= 37 && b <= 74
-                && Math.Abs(r - g) <= 12;
-        }
-
-        /// <summary>
-        /// Finds the password input box and waits until it has actually rendered, returning its
-        /// measured centre and horizontal extent, or null on timeout.
-        ///
-        /// The box is located as the widest horizontal run of the field-fill colour on the rows just
-        /// above the "Forgot password?" anchor (the field sits directly above the link). Detecting the
-        /// field itself — rather than trusting the cyan link — is what guarantees we only click once
-        /// the thing we are about to type into actually exists. Deriving the geometry from the capture
-        /// keeps it correct across resolutions instead of relying on fixed pixel offsets.
-        /// </summary>
-        private static PasswordFieldInfo WaitForPasswordField(IntPtr windowHandle, int anchorY, int retries = 40, int delay = 250)
-        {
-            if (windowHandle == IntPtr.Zero)
-                throw new ArgumentException("Invalid window handle.", nameof(windowHandle));
-
-            for (int i = 1; i <= retries; i++)
-            {
-                using (var img = Imaging.CaptureWindowImage(windowHandle))
-                {
-                    //the field spans a band roughly 30-70px above the anchor; scan that band for the
-                    //widest field-fill run and take the row whose run is widest as the field centre
-                    int scanTop = Math.Max(0, anchorY - 80);
-                    int scanBottom = Math.Max(0, anchorY - 15);
-
-                    int bestRun = 0, bestLeft = 0, bestRight = 0, bestY = 0;
-
-                    for (int y = scanTop; y < scanBottom && y < img.Height; y++)
-                    {
-                        int run = 0, runStart = 0, curLeft = 0, curRight = 0, curBest = 0;
-                        for (int x = 0; x < img.Width; x++)
-                        {
-                            var c = img.GetPixel(x, y);
-                            if (IsFieldFill(c.R, c.G, c.B))
-                            {
-                                if (run == 0)
-                                    runStart = x;
-                                run++;
-                                if (run > curBest)
-                                {
-                                    curBest = run;
-                                    curLeft = runStart;
-                                    curRight = x;
-                                }
-                            }
-                            else
-                            {
-                                run = 0;
-                            }
-                        }
-
-                        if (curBest > bestRun)
-                        {
-                            bestRun = curBest;
-                            bestLeft = curLeft;
-                            bestRight = curRight;
-                            bestY = y;
-                        }
-                    }
-
-                    //log what the widest run was this iteration so a failure shows whether the field
-                    //was simply never found vs found-but-too-narrow vs a colour-match problem
-                    Log($"WaitForPasswordField try {i}/{retries}: img={img.Width}x{img.Height} scan Y={scanTop}..{scanBottom} bestRun={bestRun} (floor {PASSWORD_FIELD_MIN_WIDTH}) at Y={bestY} X={bestLeft}..{bestRight}");
-
-                    //require an absolute minimum run width to count as the field box. This is a FIXED
-                    //pixel floor, not a fraction of the window: the card does not scale with the
-                    //window, so the field stays ~440px wide whether the window is small or maximized
-                    if (bestRun >= PASSWORD_FIELD_MIN_WIDTH)
-                    {
-                        //bestY is merely the widest field-fill row, which tends to land near the top of
-                        //the box (text-free rows are widest). The typed characters render at the box's
-                        //vertical CENTRE, so we must find the field's true top and bottom to sample the
-                        //right rows later. Walk up and down from bestY at a column just inside the left
-                        //edge (clear of the centred text) until the fill colour ends.
-                        int probeX = bestLeft + 20;
-                        int top = bestY, bottom = bestY;
-                        while (top - 1 >= 0 && IsFieldFill(img.GetPixel(probeX, top - 1).R, img.GetPixel(probeX, top - 1).G, img.GetPixel(probeX, top - 1).B))
-                            top--;
-                        while (bottom + 1 < img.Height && IsFieldFill(img.GetPixel(probeX, bottom + 1).R, img.GetPixel(probeX, bottom + 1).G, img.GetPixel(probeX, bottom + 1).B))
-                            bottom++;
-
-                        int centerY = (top + bottom) / 2;
-                        Log($"password field vertical extent Y={top}..{bottom} -> centerY={centerY}");
-
-                        return new PasswordFieldInfo
-                        {
-                            //X = window centre: the card (and therefore the field) is horizontally
-                            //centred, which holds at any resolution and avoids keying on the field's
-                            //own edges (which include the eye icon on the right)
-                            CenterX = img.Width / 2,
-                            CenterY = centerY,
-                            Top = top,
-                            Bottom = bottom,
-                            Left = bestLeft,
-                            Right = bestRight,
-                        };
-                    }
-                }
-
+                lastField = moved ? field : null;
                 Thread.Sleep(delay);
             }
 
