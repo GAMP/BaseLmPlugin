@@ -175,15 +175,8 @@ namespace BaseLmPlugin
 
         public override void Uninstall(IApplicationLicense license)
         {
-            //check if user settings file exists
-            if (File.Exists(EpicLicenseHandler.USER_SETTINGS_FILE_PATH))
-            {
-                if (!NativeMethods.WritePrivateProfileString("RememberMe", "Enable", "False", EpicLicenseHandler.USER_SETTINGS_FILE_PATH))
-                    throw new Win32Exception();
-
-                if (!NativeMethods.WritePrivateProfileString("RememberMe", "Data", null, EpicLicenseHandler.USER_SETTINGS_FILE_PATH))
-                    throw new Win32Exception();
-            }
+            //drop any persisted sign in state so the next user is not signed in with this account
+            EpicLicenseHandler.ClearLoginState(null);
         }
 
         public override System.Windows.Controls.UserControl GetConfigurationUI()
