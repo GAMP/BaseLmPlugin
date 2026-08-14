@@ -62,6 +62,10 @@ namespace BaseLmPlugin
         //Minimum width of the field-fill run to accept it as the password input box (measured ~440px).
         private const int PASSWORD_FIELD_MIN_WIDTH = 200;
 
+        //A launcher window must be at least this wide and tall to be the real UI window; the launcher
+        //also creates 0x0 placeholder windows that would otherwise be accepted (see HasUsableSize).
+        private const int MIN_USABLE_WINDOW_SIZE = 200;
+
         //Minimum count of non-fill (glyph) pixels inside the field interior to consider the password
         //to have actually landed. An empty field measures zero; a few stray pixels could be a caret /
         //anti-aliasing, so require a clear signal.
@@ -213,31 +217,42 @@ namespace BaseLmPlugin
                     .Where(p => !p.HasExited)
                     .FirstOrDefault();
 
+                //wait for the process to create its windows before looking for the UI window
+                if (targetProcess != null)
+                    CoreProcess.WaitForWindowCreated(targetProcess.Id, LARGE_DELAY);
+
+                //Find the real UI window. This must be validated by SIZE, not merely by being a
+                //non-zero handle: the launcher creates several 0x0 "UnrealWindow" placeholders and its
+                //Process.MainWindowHandle often points at one of them. A 0x0 handle is not IntPtr.Zero,
+                //so taking MainWindowHandle unchecked yields a window that captures as an empty image
+                //and every pixel stage below then fails for no visible reason.
                 IntPtr windowHandle = IntPtr.Zero;
 
-                //no process found
-                if (targetProcess != null)
+                for (int i = 0; i < 30; i++)
                 {
-                    //wait for the process window to be created
-                    if (CoreProcess.WaitForWindowCreated(targetProcess.Id, LARGE_DELAY))
-                        windowHandle = targetProcess.MainWindowHandle;
-                }
+                    //prefer the titled launcher window, which is the one hosting the web UI
+                    var candidate = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "UnrealWindow", "Epic Games Launcher");
 
-                //if we failed to obtain window process try to find it in system
-                if (windowHandle == IntPtr.Zero)
-                {
-                    for (int i = 0; i < 30; i++)
+                    //fall back to the process main window if the titled one is not up yet
+                    if (!HasUsableSize(candidate) && targetProcess != null)
                     {
-                        windowHandle = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "UnrealWindow", "Epic Games Launcher");
-                        if (windowHandle != IntPtr.Zero)
-                            break;
-
-                        Thread.Sleep(SMALL_DELAY);
+                        targetProcess.Refresh();
+                        candidate = targetProcess.MainWindowHandle;
                     }
+
+                    if (HasUsableSize(candidate))
+                    {
+                        windowHandle = candidate;
+                        break;
+                    }
+
+                    Thread.Sleep(SMALL_DELAY);
                 }
 
                 if (windowHandle == IntPtr.Zero)
                     throw new ArgumentException("Epic launcher window not found");
+
+                Log($"using launcher window handle {windowHandle}");
 
                 //get the main window instance
                 WindowInfo window = new(windowHandle);
@@ -629,6 +644,31 @@ namespace BaseLmPlugin
                 }
 
                 return nonFill;
+            }
+        }
+
+        /// <summary>
+        /// True if the handle refers to a window with a real, non-empty rectangle.
+        ///
+        /// The launcher creates several 0x0 "UnrealWindow" placeholder windows, and its
+        /// Process.MainWindowHandle frequently refers to one of them. Those handles are perfectly
+        /// valid and NOT IntPtr.Zero, so a plain null check accepts them and every subsequent capture
+        /// comes back empty. Requiring a usable size is what distinguishes the real UI window.
+        /// </summary>
+        private static bool HasUsableSize(IntPtr windowHandle)
+        {
+            if (windowHandle == IntPtr.Zero)
+                return false;
+
+            try
+            {
+                var rectangle = new WindowInfo(windowHandle).Rectangle;
+                return rectangle.Width > MIN_USABLE_WINDOW_SIZE && rectangle.Height > MIN_USABLE_WINDOW_SIZE;
+            }
+            catch
+            {
+                //a handle can go away between enumeration and inspection; treat it as unusable
+                return false;
             }
         }
 
