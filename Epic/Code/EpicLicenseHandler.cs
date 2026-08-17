@@ -9,6 +9,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Win32API.Modules;
 using WindowsInput;
@@ -65,6 +66,21 @@ namespace BaseLmPlugin
         //A launcher window must be at least this wide and tall to be the real UI window; the launcher
         //also creates 0x0 placeholder windows that would otherwise be accepted (see HasUsableSize).
         private const int MIN_USABLE_WINDOW_SIZE = 200;
+
+        //how long to wait for an existing launcher process to actually exit after being killed
+        private const int PROCESS_EXIT_TIMEOUT = 3000;
+
+        //Solid cyan primary button ("Continue" / "Sign in"). The tolerance is deliberately looser than
+        //the input box one: this is a large saturated fill whose exact value shifts slightly with the
+        //GPU, colour profile and scaling filter, and being strict would fail on other machines.
+        private const int BUTTON_FILL_R = 38;
+        private const int BUTTON_FILL_G = 187;
+        private const int BUTTON_FILL_B = 255;
+        private const int BUTTON_FILL_TOLERANCE = 12;
+
+        //a cyan run must be at least this wide and tall to be the button rather than a text link
+        private const int BUTTON_MIN_WIDTH = 200;
+        private const int BUTTON_MIN_HEIGHT = 28;
 
         //Minimum count of non-fill (glyph) pixels inside the field interior to consider the password
         //to have actually landed. An empty field measures zero; a few stray pixels could be a caret /
@@ -162,12 +178,31 @@ namespace BaseLmPlugin
 
         public static Process StartEpicProcess(string fileName, string arguments, string workingDirectory, string username, string password, IExecutionContext cx)
         {
+            //Opt this process into per-monitor physical pixels BEFORE anything measures a window or
+            //moves the cursor. Without it Windows virtualises coordinates for a non DPI aware process
+            //on a scaled display (125%, 150%, ...): GetWindowRect reports logical coordinates while the
+            //captured image and SetCursorPos work in physical pixels, so every pixel offset we compute
+            //is wrong by the scale factor and the clicks land outside the fields. This is the most
+            //likely reason the automation worked on a 100% scaled machine but failed elsewhere.
+            EnsureDpiAware();
+
             try
             {
-                //kill all existing epic processes
-                Process.GetProcessesByName(EPIC_PROCESS_NAME)
-                    .ToList()
-                    .ForEach(proc => proc.Kill());
+                //kill all existing epic processes, waiting for each to actually go away — a launcher
+                //that is still shutting down can rewrite the settings we clear below, and can also hold
+                //the window we are about to search for
+                foreach (var existingProcess in Process.GetProcessesByName(EPIC_PROCESS_NAME))
+                {
+                    try
+                    {
+                        existingProcess.Kill();
+                        existingProcess.WaitForExit(PROCESS_EXIT_TIMEOUT);
+                    }
+                    catch (Exception)
+                    {
+                        //we failed but that is ok
+                    }
+                }
             }
             catch (Exception)
             {
@@ -233,7 +268,12 @@ namespace BaseLmPlugin
                     //prefer the titled launcher window, which is the one hosting the web UI
                     var candidate = User32.FindWindowEx(IntPtr.Zero, IntPtr.Zero, "UnrealWindow", "Epic Games Launcher");
 
-                    //fall back to the process main window if the titled one is not up yet
+                    //the exact title is not guaranteed (it varies by launcher build and locale), so
+                    //fall back to scanning visible windows for an Epic one
+                    if (!HasUsableSize(candidate))
+                        candidate = FindEpicWindowByScan();
+
+                    //last resort: the process main window, which may still be a 0x0 placeholder
                     if (!HasUsableSize(candidate) && targetProcess != null)
                     {
                         targetProcess.Refresh();
@@ -362,18 +402,29 @@ namespace BaseLmPlugin
                 if (!passwordEntered)
                     throw new EpicManualSignInRequiredException("Epic password could not be entered into the field; manual sign in required.", targetProcess);
 
-                //re-focus the field before submitting. IsFieldNonEmpty captured the window to verify
-                //the text landed, and the enter below fires outside the type loop, so the field may no
-                //longer hold keyboard focus. Re-click it (this does not clear the already-typed value)
-                //so the enter is delivered to the field the same way a manual keypress would be. A
-                //manual enter with the field focused submits reliably; this reproduces that focus.
                 window.BringToFront();
-                SendClickToWindow(window, passwordField.CenterX, passwordField.CenterY);
-                Thread.Sleep(SMALL_DELAY);
 
-                //send enter key to initiate login
-                Log("password entered and verified; submitting with ENTER");
-                keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+                //Submit by clicking the "Sign in" button when we can find it. The button is greyed out
+                //until the field holds a password and turns solid cyan once it does, so a cyan button
+                //on this screen is both proof the form accepted the input and a click target that does
+                //not depend on where keyboard focus currently sits.
+                var signInButton = FindCyanButton(window.Handle);
+
+                if (signInButton != null)
+                {
+                    Log($"submitting by clicking sign-in button at ({signInButton.CenterX},{signInButton.CenterY})");
+                    SendClickToWindow(window, signInButton.CenterX, signInButton.CenterY);
+                }
+                else
+                {
+                    //fall back to ENTER. Re-click the field first: the verification capture happens
+                    //between typing and here, so the field may no longer hold keyboard focus, and a
+                    //re-click restores it without clearing the already typed value.
+                    Log("sign-in button not found; falling back to ENTER");
+                    SendClickToWindow(window, passwordField.CenterX, passwordField.CenterY);
+                    Thread.Sleep(SMALL_DELAY);
+                    keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+                }
 
                 return targetProcess;
             }
@@ -644,6 +695,175 @@ namespace BaseLmPlugin
                 }
 
                 return nonFill;
+            }
+        }
+
+        /// <summary>
+        /// Finds the largest solid cyan button in the window (the "Continue" / "Sign in" primary
+        /// button) and returns its centre, or null if none is present.
+        ///
+        /// The button is matched with a looser colour tolerance than the input box because it is a
+        /// large saturated fill: different GPUs, colour profiles and scaling filters shift it by a few
+        /// units, and being strict here would make the check fail on machines other than the one the
+        /// values were sampled on. Candidate runs must also be reasonably wide AND tall so that thin
+        /// cyan links (for example "Forgot password?") can never be mistaken for the button.
+        /// </summary>
+        private static PasswordFieldInfo FindCyanButton(IntPtr windowHandle)
+        {
+            using (var img = Imaging.CaptureWindowImage(windowHandle))
+            {
+                PasswordFieldInfo best = null;
+                int bestArea = 0;
+
+                for (int y = 0; y < img.Height; y++)
+                {
+                    int run = 0, runStart = 0;
+
+                    for (int x = 0; x <= img.Width; x++)
+                    {
+                        bool isButton = false;
+                        if (x < img.Width)
+                        {
+                            var c = img.GetPixel(x, y);
+                            isButton = IsButtonFill(c.R, c.G, c.B);
+                        }
+
+                        if (isButton)
+                        {
+                            if (run == 0)
+                                runStart = x;
+                            run++;
+                            continue;
+                        }
+
+                        if (run >= BUTTON_MIN_WIDTH)
+                        {
+                            //measure the run's height at a column inside it, away from the rounded ends
+                            int probeX = Math.Min(runStart + Math.Max(3, run / 6), img.Width - 1);
+
+                            int top = y;
+                            while (top - 1 >= 0 && IsButtonFill(img.GetPixel(probeX, top - 1).R, img.GetPixel(probeX, top - 1).G, img.GetPixel(probeX, top - 1).B))
+                                top--;
+
+                            int bottom = y;
+                            while (bottom + 1 < img.Height && IsButtonFill(img.GetPixel(probeX, bottom + 1).R, img.GetPixel(probeX, bottom + 1).G, img.GetPixel(probeX, bottom + 1).B))
+                                bottom++;
+
+                            int height = bottom - top + 1;
+                            if (height >= BUTTON_MIN_HEIGHT && run * height > bestArea)
+                            {
+                                bestArea = run * height;
+                                best = new PasswordFieldInfo
+                                {
+                                    Left = runStart,
+                                    Right = runStart + run - 1,
+                                    Top = top,
+                                    Bottom = bottom,
+                                    CenterX = runStart + run / 2,
+                                    CenterY = (top + bottom) / 2,
+                                    Width = run,
+                                };
+                            }
+                        }
+
+                        run = 0;
+                    }
+                }
+
+                return best;
+            }
+        }
+
+        /// <summary>
+        /// True if a pixel belongs to the solid cyan primary button.
+        /// </summary>
+        private static bool IsButtonFill(byte r, byte g, byte b)
+        {
+            return Math.Abs(r - BUTTON_FILL_R) <= BUTTON_FILL_TOLERANCE
+                && Math.Abs(g - BUTTON_FILL_G) <= BUTTON_FILL_TOLERANCE
+                && Math.Abs(b - BUTTON_FILL_B) <= BUTTON_FILL_TOLERANCE;
+        }
+
+        /// <summary>
+        /// Scans visible top level windows for the Epic launcher and returns the first one with a
+        /// usable size, or IntPtr.Zero.
+        ///
+        /// This backs up the exact-title lookup, which is brittle: the launcher's window title varies
+        /// between builds and locales, and several same-class placeholder windows exist. Matching on
+        /// "contains Epic" plus a usable size finds the real UI window without depending on the title
+        /// being character-for-character what we expect.
+        /// </summary>
+        private static IntPtr FindEpicWindowByScan()
+        {
+            IntPtr found = IntPtr.Zero;
+
+            try
+            {
+                User32.EnumWindows((handle, param) =>
+                {
+                    if (!User32.IsWindowVisible(handle))
+                        return true;
+
+                    var title = new StringBuilder(256);
+                    User32.GetWindowText(handle, title, title.Capacity);
+
+                    var className = new StringBuilder(256);
+                    User32.GetClassName(handle, className, className.Capacity);
+
+                    bool looksLikeEpic =
+                        title.ToString().IndexOf("Epic Games Launcher", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        (className.ToString() == "UnrealWindow" && title.ToString().IndexOf("Epic", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                    //only accept a real window, never one of the 0x0 placeholders
+                    if (looksLikeEpic && HasUsableSize(handle))
+                    {
+                        found = handle;
+                        return false;
+                    }
+
+                    return true;
+                }, IntPtr.Zero);
+            }
+            catch (Exception)
+            {
+                //enumeration failed; caller falls back to other strategies
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// Opts the host process into DPI awareness so window rectangles, captured images and cursor
+        /// positions are all expressed in the same (physical) pixels.
+        ///
+        /// A process that is not DPI aware gets virtualised coordinates on a scaled display: window
+        /// rectangles come back in logical units while the screen capture and SetCursorPos operate in
+        /// physical pixels. Every offset derived from the capture is then wrong by the scale factor,
+        /// which is invisible at 100% scaling and breaks the automation completely at 125% or 150%.
+        ///
+        /// Best effort and idempotent: both calls fail harmlessly if awareness was already set (for
+        /// example by the host application or its manifest), and the per-monitor call is missing
+        /// entirely on older Windows, in which case we fall back to the legacy system-DPI call.
+        /// </summary>
+        private static void EnsureDpiAware()
+        {
+            try
+            {
+                if (NativeMethods.SetProcessDpiAwarenessContext(NativeMethods.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+                    return;
+            }
+            catch (Exception)
+            {
+                //API not present on this Windows version, fall through to the legacy call
+            }
+
+            try
+            {
+                NativeMethods.SetProcessDPIAware();
+            }
+            catch (Exception)
+            {
+                //nothing else we can do; on a scaled display the coordinates may be virtualised
             }
         }
 
@@ -920,6 +1140,18 @@ namespace BaseLmPlugin
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetCursorPos([In] int X, [In] int Y);
+
+        //Per-monitor v2 gives correct physical coordinates on mixed-DPI setups. Only present on
+        //Windows 10 1703+, hence the graceful fallback to the legacy system-DPI-aware call.
+        public static readonly IntPtr DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = new IntPtr(-4);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetProcessDpiAwarenessContext(IntPtr value);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetProcessDPIAware();
 
         public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         public const uint MOUSEEVENTF_LEFTUP = 0x0004;
