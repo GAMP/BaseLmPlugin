@@ -14,7 +14,7 @@
 		<TargetFramework>net10.0-windows</TargetFramework>
 		<Configurations>Debug;Release</Configurations>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Version>3.0.0.2</Version>
+		<Version>3.0.0.3</Version>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -90,7 +90,16 @@
 			<Files Include="$(PublishDir)*.json" />
 			<Files Include="$(PublishDir)*.xml" />
 			<FilesToDelete Include="@(Files)" Condition="%(Filename) != 'BaseLmPlugin'" />
-			<DirsToClean Include="$([System.IO.Directory]::GetDirectories('$(PublishDir)'))" />
+
+			<!--
+				Culture sub directories hold this plugin's satellite assemblies (the localized
+				resources) and MUST survive the clean up. They are identified from the satellite
+				assemblies the build actually produced, so adding a new locale resx needs no change
+				here. Everything else is dependency output and still gets removed.
+			-->
+			<SatelliteCultureDir Include="@(IntermediateSatelliteAssembliesWithTargetPath->'$(PublishDir)%(Culture)')" />
+			<DirsToClean Include="$([System.IO.Directory]::GetDirectories('$(PublishDir)'))"
+						 Exclude="@(SatelliteCultureDir)" />
 		</ItemGroup>
 
 		<!--remove leftorver pdb files-->
