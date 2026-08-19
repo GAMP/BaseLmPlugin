@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LICENSE_KEY_ACCOUNT_ID_NAME" xml:space="preserve">
+    <value>Id. de cuenta</value>
+  </data>
+  <data name="LICENSE_KEY_PASSWORD_NAME" xml:space="preserve">
+    <value>Contraseña</value>
+  </data>
+  <data name="LICENSE_KEY_USER_NAME_NAME" xml:space="preserve">
+    <value>Nombre de usuario</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_HIVE_DESCRIPTION" xml:space="preserve">
+    <value>Especifica la sección del registro</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_HIVE_NAME" xml:space="preserve">
+    <value>Sección del registro</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_PATH_DESCRIPTION" xml:space="preserve">
+    <value>Especifica la ruta del registro</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_PATH_NAME" xml:space="preserve">
+    <value>Ruta del registro</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_VALUE_KIND_DESCRIPTION" xml:space="preserve">
+    <value>Especifica el tipo de valor</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_VALUE_KIND_NAME" xml:space="preserve">
+    <value>Tipo de valor</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_IGNORE_LIST_DESCRIPTION" xml:space="preserve">
+    <value>Lista separada por punto y coma de nombres de procesos (o nombres completos de ejecutables) que se ignoran al evaluar el árbol de procesos. Los procesos ignorados no mantienen la sesión activa ni afectan a la detección de salida.</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_IGNORE_LIST_NAME" xml:space="preserve">
+    <value>Procesos ignorados en el árbol</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_WAIT_TIMEOUT_DESCRIPTION" xml:space="preserve">
+    <value>Cuánto tiempo esperar antes de finalizar la sesión después de que se considere que el árbol de procesos supervisado ha finalizado. Esto ayuda a evitar salidas falsas durante reinicios rápidos o transferencias entre lanzadores.</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_WAIT_TIMEOUT_NAME" xml:space="preserve">
+    <value>Periodo de gracia tras la salida del árbol</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_TERMINATE_CHILD_ON_EXIT_DESCRIPTION" xml:space="preserve">
+    <value>Habilita la finalización de los procesos secundarios</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_TERMINATE_CHILD_ON_EXIT_NAME" xml:space="preserve">
+    <value>Finalizar la sesión cuando salga el árbol de procesos</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_DESCRIPTION" xml:space="preserve">
+    <value>Administra claves de licencia pasándolas a ejecutables externos</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_NAME" xml:space="preserve">
+    <value>Administrador de licencias de procesos</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_ARGUMENTS_DESCRIPTION" xml:space="preserve">
+    <value>Establece los argumentos del ejecutable que se usarán</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_ARGUMENTS_NAME" xml:space="preserve">
+    <value>Argumentos del ejecutable</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_EXECUTABLE_PATH_DESCRIPTION" xml:space="preserve">
+    <value>Establece la ruta del archivo ejecutable que se usará</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_EXECUTABLE_PATH_NAME" xml:space="preserve">
+    <value>Ruta del ejecutable</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_HIDE_DESCRIPTION" xml:space="preserve">
+    <value>Establece si se debe intentar iniciar el proceso del archivo ejecutable con su ventana principal oculta</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_HIDE_NAME" xml:space="preserve">
+    <value>Ocultar ventana principal</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WAIT_FOR_EXIT_DESCRIPTION" xml:space="preserve">
+    <value>Establece si se debe esperar a que el proceso ejecutable finalice</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WAIT_FOR_EXIT_NAME" xml:space="preserve">
+    <value>Esperar la salida</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WORKING_DIRECTORY_DESCRIPTION" xml:space="preserve">
+    <value>Establece el directorio de trabajo del ejecutable</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WORKING_DIRECTORY_NAME" xml:space="preserve">
+    <value>Directorio de trabajo</value>
+  </data>
+</root>

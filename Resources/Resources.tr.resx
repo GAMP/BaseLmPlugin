@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LICENSE_KEY_ACCOUNT_ID_NAME" xml:space="preserve">
+    <value>Hesap kimliği</value>
+  </data>
+  <data name="LICENSE_KEY_PASSWORD_NAME" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="LICENSE_KEY_USER_NAME_NAME" xml:space="preserve">
+    <value>Kullanıcı adı</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_HIVE_DESCRIPTION" xml:space="preserve">
+    <value>Kayıt defteri kovanını belirtir</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_HIVE_NAME" xml:space="preserve">
+    <value>Kayıt defteri kovanı</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_PATH_DESCRIPTION" xml:space="preserve">
+    <value>Kayıt defteri yolunu belirtir</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_PATH_NAME" xml:space="preserve">
+    <value>Kayıt defteri yolu</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_VALUE_KIND_DESCRIPTION" xml:space="preserve">
+    <value>Değer türünü belirtir</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_REGISTRY_VALUE_KIND_NAME" xml:space="preserve">
+    <value>Değer türü</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_IGNORE_LIST_DESCRIPTION" xml:space="preserve">
+    <value>İşlem ağacı değerlendirilirken yok sayılacak işlem adlarının (veya tam yürütülebilir dosya adlarının) noktalı virgülle ayrılmış listesi. Yok sayılan işlemler oturumu açık tutmaz ve çıkış algılamasını etkilemez.</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_IGNORE_LIST_NAME" xml:space="preserve">
+    <value>Ağaçta yok sayılan işlemler</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_WAIT_TIMEOUT_DESCRIPTION" xml:space="preserve">
+    <value>İzlenen işlem ağacının sonlandığı kabul edildikten sonra oturumu bitirmeden önce ne kadar bekleneceği. Bu, hızlı yeniden başlatmalarda veya başlatıcı devirlerinde yanlış çıkışları önlemeye yardımcı olur.</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_CHILD_WAIT_TIMEOUT_NAME" xml:space="preserve">
+    <value>Ağaç çıkışından sonraki ek süre</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_TERMINATE_CHILD_ON_EXIT_DESCRIPTION" xml:space="preserve">
+    <value>Alt işlemlerin sonlandırılmasını etkinleştirir</value>
+  </data>
+  <data name="LICENSE_MANAGER_SETTINGS_STEAM_TERMINATE_CHILD_ON_EXIT_NAME" xml:space="preserve">
+    <value>İşlem ağacı sonlandığında oturumu bitir</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_DESCRIPTION" xml:space="preserve">
+    <value>Lisans anahtarlarını harici yürütülebilir dosyalara ileterek yönetir</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_NAME" xml:space="preserve">
+    <value>İşlem lisans yöneticisi</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_ARGUMENTS_DESCRIPTION" xml:space="preserve">
+    <value>Kullanılacak yürütülebilir dosya argümanlarını ayarlar</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_ARGUMENTS_NAME" xml:space="preserve">
+    <value>Yürütülebilir dosya argümanları</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_EXECUTABLE_PATH_DESCRIPTION" xml:space="preserve">
+    <value>Kullanılacak yürütülebilir dosyanın yolunu ayarlar</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_EXECUTABLE_PATH_NAME" xml:space="preserve">
+    <value>Yürütülebilir dosya yolu</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_HIDE_DESCRIPTION" xml:space="preserve">
+    <value>Yürütülebilir dosya işleminin ana penceresi gizli olarak başlatılmaya çalışılıp çalışılmayacağını ayarlar</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_HIDE_NAME" xml:space="preserve">
+    <value>Ana pencereyi gizle</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WAIT_FOR_EXIT_DESCRIPTION" xml:space="preserve">
+    <value>Yürütülebilir işlemin sonlanmasının beklenip beklenmeyeceğini ayarlar</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WAIT_FOR_EXIT_NAME" xml:space="preserve">
+    <value>Çıkışı bekle</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WORKING_DIRECTORY_DESCRIPTION" xml:space="preserve">
+    <value>Yürütülebilir dosyanın çalışma dizinini ayarlar</value>
+  </data>
+  <data name="PROCESS_LICENSE_MANAGER_OPTION_WORKING_DIRECTORY_NAME" xml:space="preserve">
+    <value>Çalışma dizini</value>
+  </data>
+</root>
